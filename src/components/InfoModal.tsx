@@ -1,0 +1,67 @@
+import React from "react";
+import ModalBackground from "./ModalBackground";
+
+interface InfoModalProps {
+  isOpen: boolean;
+  title?: string;
+  message?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  confirmVariant?: "primary" | "danger";
+  onClose: () => void;
+  onConfirm?: () => void;
+}
+
+export default function InfoModal({
+  isOpen,
+  title = "",
+  message = "",
+  confirmLabel = "Ok",
+  cancelLabel = "Cancel",
+  confirmVariant = "primary",
+  onClose,
+  onConfirm,
+}: InfoModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <ModalBackground className="p-4" onClose={onClose}>
+      <div className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full overflow-hidden">
+        <div className="p-8 text-center">
+          {title && <h2 className="text-2xl font-semibold text-white mb-4">{title}</h2>}
+          {message && <p className="text-gray-300 mb-8 whitespace-pre-wrap">{message}</p>}
+          {onConfirm ? (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 py-3 text-lg font-semibold rounded-lg text-white bg-gray-600 hover:bg-gray-700 transition-all duration-300"
+              >
+                {cancelLabel}
+              </button>
+              <button
+                onClick={onConfirm}
+                className={
+                  "flex-1 py-3 text-lg font-semibold rounded-lg text-white transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] " +
+                  (confirmVariant === "danger"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-gradient-to-br from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700")
+                }
+              >
+                {confirmLabel}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onClose}
+              className="w-full py-3 text-lg font-semibold rounded-lg text-white bg-gradient-to-br from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+            >
+              {confirmLabel}
+            </button>
+          )}
+        </div>
+      </div>
+    </ModalBackground>
+  );
+}
+
+
