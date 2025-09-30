@@ -6,6 +6,7 @@ import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { useAuth } from "@clerk/nextjs";
 import ModalBackground from "./ModalBackground";
+import { useModal } from "@/hooks/useModal";
 
 interface MoveModalProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ export default function MoveModal({
     const { userId } = useAuth();
     const [selectedNotebookId, setSelectedNotebookId] = useState<Id<"notebooks"> | null>(null);
     const [isMoving, setIsMoving] = useState(false);
+    const modalRef = useModal(isOpen, onClose);
 
     // Get all notebooks for selection scoped to user
     const notebooks = useQuery(api.queries.getAllNotebooks, userId ? { ownerId: userId } : {});
@@ -57,7 +59,7 @@ export default function MoveModal({
 
     return (
         <ModalBackground onClose={onClose}>
-            <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div ref={modalRef} className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -231,7 +231,11 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ select
             });
 
             if (!response.ok) {
-                throw new Error('Failed to send message');
+                const errorData = await response.json().catch(() => ({}));
+                if (response.status === 402) {
+                    throw new Error(errorData.error || 'Insufficient shards. Please visit your Account settings to add more shards.');
+                }
+                throw new Error(errorData.error || `Failed to send message (${response.status})`);
             }
 
             const data = await response.json();
@@ -836,7 +840,7 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ select
                         {!promptTemplates || promptTemplates.length === 0 ? (
                             <div className="text-center text-gray-400 mt-8">
                                 <div className="text-2xl font-medium mb-2">No Prompt Templates</div>
-                                <div className="text-base">No prompt templates are available yet.</div>
+                                <div className="text-base">Coming Soon!</div>
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -887,12 +891,11 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ select
                 ) : currentMode === 'explore' ? (
                     <div className="p-4">
                         {!exploratoryChunks || exploratoryChunks.length === 0 ? (
-                            <div className="text-center text-gray-400 mt-8">
+                            <div className="flex flex-col items-center text-gray-400 mt-8">
                                 <div className="text-2xl font-medium mb-2">Explore</div>
-                                <div className="text-base mb-4">No exploratory chunks found. Assign the purple EXPLORATORY tag to chunks to see them here!</div>
-                                <div className="text-sm text-gray-500 max-w-md mx-auto">
-                                    <p className="mb-2">To add chunks to this view:</p>
-                                    <ol className="text-left space-y-1">
+                                <div className="text-base mb-4">To add chunks to this view:</div>
+                                <div className="text-sm text-gray-500 max-w-md">
+                                    <ol className="space-y-1">
                                         <li>1. Go to the Chat tab and generate some chunks</li>
                                         <li>2. Click the purple EXPLORATORY button on any chunk</li>
                                         <li>3. Save the chunks to see them appear here</li>

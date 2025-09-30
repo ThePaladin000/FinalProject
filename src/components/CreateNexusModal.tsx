@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import CustomModal, { ModalField, ModalAction } from "./CustomModal";
+import { CONSTANTS } from "@/config/constants";
 
 interface CreateNexusModalProps {
     isOpen: boolean;
@@ -26,14 +27,14 @@ export default function CreateNexusModal({ isOpen, onClose, onNexusCreated, isGu
             type: "text",
             placeholder: "Enter nexus name...",
             required: true,
-            maxLength: 100,
+            maxLength: CONSTANTS.FORM.NEXUS_NAME_MAX_LENGTH,
         },
         {
             name: "description",
             label: "Description",
             type: "textarea",
             placeholder: "Describe what this nexus is about...",
-            maxLength: 500,
+            maxLength: CONSTANTS.FORM.NEXUS_DESCRIPTION_MAX_LENGTH,
         },
     ];
 

@@ -80,7 +80,7 @@ export default function NotebookEditor({
                             <select
                                 value={newChunkType}
                                 onChange={(e) => setNewChunkType(e.target.value as "text" | "code")}
-                                className="bg-gray-700 text-white text-sm px-2 py-1 rounded border border-gray-600"
+                                className="bg-gray-700 text-white text-sm px-2 py-1 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             >
                                 <option value="text">Text</option>
                                 <option value="code">Code</option>
@@ -93,7 +93,7 @@ export default function NotebookEditor({
                                 value={newChunkContent}
                                 onChange={(e) => setNewChunkContent(e.target.value)}
                                 placeholder="Enter your code..."
-                                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 font-mono text-sm resize-none"
+                                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                 rows={6}
                             />
                         ) : (
@@ -101,7 +101,7 @@ export default function NotebookEditor({
                                 value={newChunkContent}
                                 onChange={(e) => setNewChunkContent(e.target.value)}
                                 placeholder="Enter your text..."
-                                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 resize-none"
+                                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                 rows={4}
                             />
                         )}
@@ -193,7 +193,7 @@ export default function NotebookEditor({
                                                     handleEditSave();
                                                 }
                                             }}
-                                            className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-mono text-sm resize-none"
+                                            className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                             rows={Math.max(6, editingContent.split('\n').length)}
                                         />
                                     ) : (
@@ -206,7 +206,7 @@ export default function NotebookEditor({
                                                     handleEditSave();
                                                 }
                                             }}
-                                            className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white resize-none"
+                                            className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                             rows={Math.max(4, editingContent.split('\n').length)}
                                         />
                                     )

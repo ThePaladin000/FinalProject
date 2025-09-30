@@ -499,6 +499,9 @@ function ChunkDisplay({
                                                     }
                                                 } catch (error) {
                                                     console.error('Error summarizing text:', error);
+                                                    // Show user-friendly error message
+                                                    const errorMessage = error instanceof Error ? error.message : 'Failed to summarize text. Please try again.';
+                                                    alert(`Summarization Error: ${errorMessage}`);
                                                 } finally {
                                                     setIsSummarizing(false);
                                                 }

@@ -24,8 +24,13 @@ export default function RouteProgress() {
   if (!visible) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-0.5 z-50">
-      <div className="h-full w-full animate-[routeprogress_0.45s_ease-out] bg-gradient-to-r from-purple-500 to-blue-500" />
+    <div className="fixed top-0 left-0 right-0 h-0.5 z-50" role="progressbar" aria-label="Page navigation progress">
+      <progress 
+        className="h-full w-full animate-[routeprogress_0.45s_ease-out] bg-gradient-to-r from-purple-500 to-blue-500 border-0" 
+        value="100" 
+        max="100"
+        aria-hidden="true"
+      />
       <style jsx global>{`
         @keyframes routeprogress {
           from { transform: translateX(-80%); opacity: 0.6; }
@@ -35,5 +40,4 @@ export default function RouteProgress() {
     </div>
   );
 }
-
 

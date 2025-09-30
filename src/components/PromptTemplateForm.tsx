@@ -166,7 +166,7 @@ ${formatInstructions.map(instruction => `    *   ${instruction}`).join('\n')}
                             onChange={(e) => handleInputChange('coreRequest', e.target.value)}
                             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                             rows={3}
-                            placeholder="Describe what you want to know or achieve..."
+                            placeholder="Describe what you want to know or achieve... (e.g., 'Explain quantum entanglement', 'What is the difference between LLMs and RAGs?')"
                             required
                         />
                     </div>
@@ -207,7 +207,7 @@ ${formatInstructions.map(instruction => `    *   ${instruction}`).join('\n')}
                                     value={formData.outputFormats.other}
                                     onChange={(e) => handleOtherFormatChange(e.target.value)}
                                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    placeholder="e.g., Short summary, Dialogue"
+                                    placeholder="Enter your custom format (e.g., Short summary, Dialogue, Q&A format)"
                                 />
                             </div>
                         </div>
@@ -226,7 +226,7 @@ ${formatInstructions.map(instruction => `    *   ${instruction}`).join('\n')}
                             onChange={(e) => handleInputChange('audienceAndGoal', e.target.value)}
                             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                             rows={3}
-                            placeholder="Describe who this is for and what the purpose is..."
+                            placeholder="Describe your target audience and purpose (e.g., 'A beginner learning about physics', 'My team deciding on a project methodology')"
                         />
                     </div>
 

@@ -58,22 +58,23 @@ export default function LinkModal({
                 <div className="space-y-4">
                     <div>
                         <label htmlFor="linkName" className="block text-sm font-medium text-gray-300 mb-2">
-                            Link Name
+                            Link Name *
                         </label>
                         <input
                             type="text"
                             id="linkName"
                             value={linkName}
                             onChange={(e) => setLinkName(e.target.value)}
-                            placeholder="Enter link name..."
+                            placeholder="Enter a descriptive name for this link..."
                             className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                             autoFocus
+                            required
                         />
                     </div>
 
                     <div>
                         <label htmlFor="linkUrl" className="block text-sm font-medium text-gray-300 mb-2">
-                            URL
+                            URL *
                         </label>
                         <input
                             type="url"
@@ -82,6 +83,7 @@ export default function LinkModal({
                             onChange={(e) => setLinkUrl(e.target.value)}
                             placeholder="https://example.com"
                             className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            required
                         />
                     </div>
                 </div>

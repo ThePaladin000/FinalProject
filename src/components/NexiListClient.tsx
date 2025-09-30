@@ -233,12 +233,12 @@ export default function NexiListClient() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col items-center justify-center h-64 space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-white mb-2">Welcome to Nexus Tech</h2>
+              <h2 className="text-2xl font-futuristic font-black text-white mb-2">WELCOME TO NEXUS TECH</h2>
               <p className="text-gray-300 mb-6">Sign in to access your research hub and start organizing your knowledge</p>
             </div>
             <button
               onClick={() => router.push("/login")}
-              className="bg-gradient-to-br from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
+              className="bg-gradient-to-br from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl font-futuristic font-semibold"
             >
               Sign In
             </button>
@@ -253,7 +253,7 @@ export default function NexiListClient() {
     <div className="flex-1 p-5 overflow-y-auto min-h-0">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-5">
-          <h1 className="text-2xl font-bold">Your Nexus Hub</h1>
+          <h1 className="text-2xl font-futuristic font-black">YOUR NEXUS HUB</h1>
           {isSignedIn ? (
             <button
               onClick={() => setIsCreateNexusModalOpen(true)}

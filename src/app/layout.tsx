@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Nexus Tech",
   icons: {
-    icon: "/vercel.svg",
+    icon: "/images/purple-nexus-icon.svg",
   },
 };
 
@@ -15,8 +15,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <ClerkProvider
-          signInUrl="/login"
-          signUpUrl="/login"
+          signInFallbackRedirectUrl="/login"
+          signUpFallbackRedirectUrl="/login"
           afterSignInUrl="/nexi"
           afterSignUpUrl="/nexi"
         >

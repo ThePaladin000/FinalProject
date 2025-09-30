@@ -106,7 +106,7 @@ export default function DomainManager({ domains, onDomainsChange, onClose }: Dom
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    placeholder="e.g., React Development"
+                                    placeholder="Enter a descriptive name for your knowledge domain..."
                                     required
                                 />
                             </div>
@@ -117,7 +117,7 @@ export default function DomainManager({ domains, onDomainsChange, onClose }: Dom
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     rows={3}
-                                    placeholder="Describe what this domain will contain..."
+                                    placeholder="Provide a detailed description of what this knowledge domain will contain..."
                                     required
                                 />
                             </div>
@@ -143,7 +143,7 @@ export default function DomainManager({ domains, onDomainsChange, onClose }: Dom
                                     value={formData.tags}
                                     onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                                     className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    placeholder="react, javascript, frontend"
+                                    placeholder="Enter comma-separated tags (e.g., react, javascript, frontend)"
                                     maxLength={200}
                                 />
                                 <div className="text-xs text-gray-400 mt-1">

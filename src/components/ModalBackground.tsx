@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { KEYBOARD_CONSTANTS } from '@/config/constants';
 
 interface ModalBackgroundProps {
     children: React.ReactNode;
@@ -14,13 +15,33 @@ export default function ModalBackground({ children, className = "", onClose }: M
         const img = new Image();
         img.onload = () => setImageLoaded(true);
         img.onerror = () => setImageError(true);
-        img.src = 'https://hxoioik70f.ufs.sh/f/0k2E79EeOiRXC9JT9EPZDyl0tX8EF2mnzs16kBHpQR9JiOYM';
+        img.src = '/images/modal-background.png';
     }, []);
+
+    // Handle ESC key
+    useEffect(() => {
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === KEYBOARD_CONSTANTS.ESCAPE_KEY && onClose) {
+                onClose();
+            }
+        };
+
+        if (onClose) {
+            document.addEventListener('keydown', handleEscape);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [onClose]);
 
     return (
         <div
             className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${className}`}
             onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Modal dialog"
         >
             {/* Background Image Layer */}
             <div
@@ -28,12 +49,13 @@ export default function ModalBackground({ children, className = "", onClose }: M
                 style={{
                     background: `
                         linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-                        url('https://hxoioik70f.ufs.sh/f/0k2E79EeOiRXC9JT9EPZDyl0tX8EF2mnzs16kBHpQR9JiOYM') center/cover no-repeat
+                        url('/images/modal-background.png') center/cover no-repeat
                     `,
                     opacity: imageLoaded && !imageError ? 1 : 0,
                     transition: 'opacity 0.5s ease-in-out',
                     pointerEvents: 'none'
                 }}
+                aria-hidden="true"
             />
 
             {/* Content Layer */}

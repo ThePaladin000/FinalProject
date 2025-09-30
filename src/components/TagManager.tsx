@@ -561,9 +561,9 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                         </div>
                     </div>
 
-                    <div className="flex-1 flex overflow-hidden">
+                    <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                         {/* Left Panel - Filters and Tag Tree */}
-                        <div className="w-1/2 flex flex-col border-r border-gray-700">
+                        <div className="w-1/2 lg:w-1/2 md:w-full flex flex-col border-r-0 lg:border-r border-gray-700">
                             {/* Filters */}
                             <div className="p-4 border-b border-gray-700">
                                 <div className="space-y-4">
@@ -650,7 +650,7 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                         </div>
 
                         {/* Right Panel - Tag Details */}
-                        <div className="w-1/2 flex flex-col">
+                        <div className="w-1/2 lg:w-1/2 md:w-full flex flex-col">
                             {selectedTag ? (
                                 <div className="flex-1 overflow-y-auto p-6">
                                     <div className="space-y-6">

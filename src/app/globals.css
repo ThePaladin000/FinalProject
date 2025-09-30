@@ -1,4 +1,13 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "Orbitron";
+  src: url("/fonts/orbitron.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -136,4 +145,12 @@
 
 .hljs-strong {
   font-weight: bold;
+}
+
+/* Futuristic font classes */
+.font-futuristic {
+  font-family:
+    "Orbitron", "SF Mono", "Monaco", "Inconsolata", "Roboto Mono",
+    "Source Code Pro", monospace;
+  letter-spacing: 0.05em;
 }

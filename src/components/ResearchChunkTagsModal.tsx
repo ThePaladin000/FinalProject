@@ -6,6 +6,7 @@ import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { useAuth } from "@clerk/nextjs";
 import ModalBackground from "./ModalBackground";
+import { useModal } from "@/hooks/useModal";
 
 interface ResearchChunkTagsModalProps {
     isOpen: boolean;
@@ -26,6 +27,7 @@ export default function ResearchChunkTagsModal({
 }: ResearchChunkTagsModalProps) {
     const { userId } = useAuth();
     const [localSelectedTagIds, setLocalSelectedTagIds] = useState<string[]>(selectedTagIds);
+    const modalRef = useModal(isOpen, onClose);
 
     // Queries - only fetch available tags, not chunk-specific tags
     const tagsByContext = useQuery(api.queries.getTagsByContext, userId ? {
@@ -114,8 +116,8 @@ export default function ResearchChunkTagsModal({
         (tagsByContext?.globalTags?.length || 0);
 
     return (
-        <ModalBackground className="p-4">
-            <div className="bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <ModalBackground className="p-4" onClose={onClose}>
+            <div ref={modalRef} className="bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-700">
                     <div>

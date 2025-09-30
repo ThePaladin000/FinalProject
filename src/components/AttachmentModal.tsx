@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ModalBackground from "./ModalBackground";
 import { PaperClipIcon } from "@heroicons/react/24/outline";
+import { useModal } from "@/hooks/useModal";
 
 interface AttachmentModalProps {
     isOpen: boolean;
@@ -21,6 +22,7 @@ export default function AttachmentModal({
 }: AttachmentModalProps) {
     const [attachmentName, setAttachmentName] = useState(initialAttachmentName);
     const [attachmentUrl, setAttachmentUrl] = useState(initialAttachmentUrl);
+    const modalRef = useModal(isOpen, onClose);
 
     const handleSave = () => {
         if (attachmentName.trim() && attachmentUrl.trim()) {
@@ -43,7 +45,7 @@ export default function AttachmentModal({
 
     return (
         <ModalBackground onClose={onClose}>
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <div ref={modalRef} className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <PaperClipIcon className="w-5 h-5 text-green-400" />
@@ -62,22 +64,23 @@ export default function AttachmentModal({
                 <div className="space-y-4">
                     <div>
                         <label htmlFor="attachmentName" className="block text-sm font-medium text-gray-300 mb-2">
-                            Attachment Name
+                            Attachment Name *
                         </label>
                         <input
                             type="text"
                             id="attachmentName"
                             value={attachmentName}
                             onChange={(e) => setAttachmentName(e.target.value)}
-                            placeholder="Enter attachment name..."
+                            placeholder="Enter a descriptive name for this attachment..."
                             className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                             autoFocus
+                            required
                         />
                     </div>
 
                     <div>
                         <label htmlFor="attachmentUrl" className="block text-sm font-medium text-gray-300 mb-2">
-                            File URL
+                            File URL *
                         </label>
                         <input
                             type="url"
@@ -86,6 +89,7 @@ export default function AttachmentModal({
                             onChange={(e) => setAttachmentUrl(e.target.value)}
                             placeholder="https://example.com/file.pdf"
                             className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
                         />
                     </div>
                 </div>

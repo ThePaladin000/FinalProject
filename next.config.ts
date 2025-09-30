@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 31536000,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
@@ -22,6 +26,7 @@ const nextConfig: NextConfig = {
     const cspDev = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
@@ -38,6 +43,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       // Allow inline scripts for Next.js and client-side libraries
       "script-src 'self' 'unsafe-inline' https:",
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
@@ -81,7 +87,6 @@ const nextConfig: NextConfig = {
               'magnetometer=()',
               'gyroscope=()',
               'accelerometer=()',
-              'document-domain=()',
               'fullscreen=(self)',
             ].join(', '),
           },

@@ -118,7 +118,6 @@ export default function LocusManager({
     const [metaQuestion, setMetaQuestion] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [nameError, setNameError] = useState("");
-    const [] = useState<Set<string>>(new Set());
     // Drag and drop state
     const [activeLocus, setActiveLocus] = useState<{
         _id: Id<"notebooks">;
@@ -789,7 +788,7 @@ export default function LocusManager({
                                         setNameError("");
                                     }
                                 }}
-                                placeholder="Enter locus name..."
+                                placeholder="Enter a descriptive name for your locus..."
                                 className="w-full bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                 required
                             />
@@ -806,7 +805,7 @@ export default function LocusManager({
                                 id="locus-description"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Describe what this locus is about..."
+                                placeholder="Optional: Describe the purpose and scope of this locus..."
                                 rows={2}
                                 className="w-full bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                             />
@@ -820,7 +819,7 @@ export default function LocusManager({
                                 id="locus-meta-question"
                                 value={metaQuestion}
                                 onChange={(e) => setMetaQuestion(e.target.value)}
-                                placeholder="What overarching question does this locus address?"
+                                placeholder="Optional: What overarching question or theme does this locus address?"
                                 rows={2}
                                 className="w-full bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                             />

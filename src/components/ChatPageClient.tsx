@@ -120,7 +120,7 @@ export default function ChatPageClient({
             <h2 className="text-lg font-semibold">Back to Locus</h2>
           </div>
         </div>
-        <ModelPicker selectedModel={selectedModel} onModelChange={setSelectedModel} className="w-48" allowedModels={allowedModels} />
+        <ModelPicker selectedModel={selectedModel} onModelChange={setSelectedModel} className="w-48 md:w-40 lg:w-48" allowedModels={allowedModels} />
       </div>
 
       {/* Context header rendered on the server page as an RSC */}

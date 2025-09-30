@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import ModalBackground from './ModalBackground';
+import { CONSTANTS } from '@/config/constants';
 
 export interface ModalField {
     name: string;
@@ -57,7 +58,7 @@ export default function CustomModal({
     // Handle escape key
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
+            if (event.key === CONSTANTS.KEYBOARD.ESCAPE_KEY) {
                 onClose();
             }
         };
@@ -74,7 +75,7 @@ export default function CustomModal({
     // Handle Ctrl+Enter to submit form
     useEffect(() => {
         const handleCtrlEnter = (event: KeyboardEvent) => {
-            if (event.key === 'Enter' && event.ctrlKey) {
+            if (event.key === CONSTANTS.KEYBOARD.ENTER_KEY && event.ctrlKey) {
                 // Prevent default behavior
                 event.preventDefault();
 
@@ -167,7 +168,7 @@ export default function CustomModal({
                             className="text-gray-400 hover:text-white transition-colors"
                             disabled={loading}
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={CONSTANTS.UI.ICON_SIZE_LG} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>

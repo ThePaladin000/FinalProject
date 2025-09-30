@@ -14,7 +14,7 @@ export default function LargeLoadingSpinner({
     className = ""
 }: LargeLoadingSpinnerProps) {
     return (
-        <div className={`flex justify-center items-center ${className}`}>
+        <div className={`flex justify-center items-center ${className}`} role="status" aria-label="Loading content">
             <div
                 className="animate-spin rounded-full border-solid border-current"
                 style={{
@@ -23,7 +23,9 @@ export default function LargeLoadingSpinner({
                     borderWidth: thickness,
                     borderColor: `${color} transparent ${color} transparent`,
                 }}
+                aria-hidden="true"
             />
+            <span className="sr-only">Loading...</span>
         </div>
     );
 } 

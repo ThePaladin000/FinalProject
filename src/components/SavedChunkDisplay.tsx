@@ -557,21 +557,21 @@ export default function SavedChunkDisplay({
     const [updatingChunkId, setUpdatingChunkId] = useState<Id<"chunks"> | null>(null);
 
     // Initialize minimizedChunks from localStorage
-    const [minimizedChunks, setMinimizedChunks] = useState<Set<Id<"chunks">>>(() => {
-        if (typeof window !== 'undefined') {
-            const storageKey = `nexus-minimized-chunks-${notebookId}`;
-            const saved = localStorage.getItem(storageKey);
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    return new Set(parsed);
-                } catch (error) {
-                    console.warn('Failed to parse minimized chunks from localStorage:', error);
-                }
+    const [minimizedChunks, setMinimizedChunks] = useState<Set<Id<"chunks">>>(new Set());
+    
+    // Load minimized chunks from localStorage
+    useEffect(() => {
+        const storageKey = `nexus-minimized-chunks-${notebookId}`;
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setMinimizedChunks(new Set(parsed));
+            } catch (error) {
+                console.warn('Failed to parse minimized chunks from localStorage:', error);
             }
         }
-        return new Set();
-    });
+    }, [notebookId]);
 
     const [deleteModal, setDeleteModal] = useState<{
         isOpen: boolean;

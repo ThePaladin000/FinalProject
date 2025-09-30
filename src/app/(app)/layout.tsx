@@ -47,9 +47,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         )}
-        {/* Left Sidebar */}
+        {/* Left Sidebar - responsive width */}
         {isSidebarOpen && (
-        <div className="w-64 bg-gray-800 flex flex-col h-full">
+        <div className="w-64 lg:w-64 md:w-56 bg-gray-800 flex flex-col h-full">
           {/* Top Section - Nexus Hub */}
           <div className="flex-shrink-0 relative">
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
@@ -66,7 +66,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-xs font-medium text-purple-400">Nexus Hub</div>
+                  <div className="text-xs font-futuristic font-bold text-purple-400">NexusTech</div>
                 </div>
               </Link>
               <div className="ml-auto w-[2.625rem] flex items-center justify-center">

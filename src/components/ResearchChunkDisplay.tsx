@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, memo } from "react";
+import React, { useState, memo } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
@@ -64,7 +64,7 @@ function ResearchChunkDisplay({
 
     // Fetch meta tags scoped by user
     const { userId } = useAuth();
-    const metaTags = useQuery(api.queries.getMetaTags, userId ? { ownerId: userId } : {}) || [];
+    const metaTags = useQuery(api.queries.getMetaTags, userId ? { ownerId: userId } : "skip") || [];
 
 
 
@@ -155,25 +155,23 @@ function ResearchChunkDisplay({
 
     const safeChunks = chunks || [];
 
-    // Simple list container - no virtualization for now to avoid spacing issues
-    const parentRef = useRef<HTMLDivElement | null>(null);
 
     return (
-        <div className={`space-y-4 ${className}`}>
-            <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-semibold text-white">Generated Chunks</h3>
-                <div className="text-base text-gray-400">
+        <section className={`space-y-4 ${className}`} aria-labelledby="chunks-heading">
+            <header className="flex items-center justify-between">
+                <h3 id="chunks-heading" className="text-2xl font-semibold text-white">Generated Chunks</h3>
+                <div className="text-base text-gray-400" aria-live="polite">
                     {safeChunks.length} chunk{safeChunks.length !== 1 ? 's' : ''}
                 </div>
-            </div>
+            </header>
 
             {safeChunks.length === 0 ? (
-                <div className={`text-center text-gray-400 py-8`}>
-                    <div className="text-2xl font-medium mb-2">No chunks created yet</div>
-                    <div className="text-base">Send a message to see chunks appear here</div>
+                <div className={`text-center text-gray-400 py-8`} role="status" aria-label="No content available">
+                    <p className="text-2xl font-medium mb-2">No chunks created yet</p>
+                    <p className="text-base">Send a message to see chunks appear here</p>
                 </div>
             ) : (
-                <div ref={parentRef} className="space-y-3">
+                <div className="space-y-3" role="list" aria-label="Generated content chunks">
                     {safeChunks.map((chunk) => {
                     const selectedMetaTag = metaTags?.find(tag => tag.name === chunkMetaTags[chunk.id]);
                     const selectedTags = localChunkTags[chunk.id] || [];
@@ -182,9 +180,11 @@ function ResearchChunkDisplay({
                         : 'border-gray-700';
 
                         return (
-                        <div
+                        <article
                             key={chunk.id}
                             className={`bg-gray-800 rounded-lg border-2 ${borderColor}`}
+                            role="listitem"
+                            aria-labelledby={`chunk-${chunk.id}-title`}
                         >
                             {/* Meta Tags and Standard Tags Display */}
                             <div className="px-3 py-2 border-b border-gray-700 bg-gray-750">
@@ -374,6 +374,9 @@ function ResearchChunkDisplay({
                                                         }
                                                     } catch (error) {
                                                         console.error('Error summarizing text:', error);
+                                                        // Show user-friendly error message
+                                                        const errorMessage = error instanceof Error ? error.message : 'Failed to summarize text. Please try again.';
+                                                        alert(`Summarization Error: ${errorMessage}`);
                                                     } finally {
                                                         setIsSummarizing(false);
                                                     }
@@ -400,7 +403,7 @@ function ResearchChunkDisplay({
 
 
                             </div>
-                        </div>
+                        </article>
                         );
                     })}
                 </div>
@@ -425,7 +428,7 @@ function ResearchChunkDisplay({
                     }}
                 />
             )}
-        </div>
+        </section>
     );
 } 
 
