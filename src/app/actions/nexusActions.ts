@@ -1,8 +1,35 @@
 "use server";
 
-import { NexusContext } from "../../lib/nexusService";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { tagForNexus } from "@/server/data/nexus";
+
+// Type definitions for NexusContext
+interface NexusContext {
+  nexus: {
+    _id: string;
+    name: string;
+    description?: string;
+  };
+  loci: Array<{
+    _id: string;
+    name: string;
+    description?: string;
+    metaQuestion?: string;
+    tags?: Array<{
+      _id: string;
+      name: string;
+      description?: string;
+      color?: string;
+    }>;
+    chunks?: Array<{
+      _id: string;
+      title?: string;
+      originalText: string;
+      chunkType: string;
+      source?: string;
+    }>;
+  }>;
+}
 
 export async function getNexusContext(nexusId: string): Promise<NexusContext | null> {
   try {

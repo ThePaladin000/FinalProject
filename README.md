@@ -12,6 +12,7 @@ A knowledge management and AI chat application that allows users to organize, se
 - **AI Integration**: OpenRouter API for multiple AI model access
 - **Styling**: Tailwind CSS
 - **Deployment**: Vercel
+- **Logging & Analytics**: PostHog for event tracking and error logging
 
 ## How to deploy
 
@@ -261,3 +262,51 @@ A knowledge management and AI chat application that allows users to organize, se
 - Export/import for data portability
 - Version history for important changes
 - Guest mode for testing without account
+
+## Logging and Error Handling
+
+This application implements centralized logging and error handling adapted for serverless deployment on Vercel.
+
+### Architecture
+
+**Traditional vs. Serverless Approach:**
+
+Since Vercel uses serverless functions (no persistent file system), we adapted the standard logging requirements:
+
+- **Request Logging**: Instead of `request.log` file → PostHog events + Vercel logs
+- **Error Logging**: Instead of `error.log` file → PostHog error capture + Vercel logs
+- **Centralized Error Handler**: Implemented in `src/lib/errorHandler.ts`
+- **Logger Module**: Located in `src/lib/logger.ts` (sends to PostHog + console)
+
+### Implementation Details
+
+**Centralized Error Handler** (`src/lib/errorHandler.ts`):
+
+- Custom error classes for different HTTP status codes
+- `handleApiError()` function for consistent error responses
+- Automatic error logging with context and metadata
+- Development vs. production error message filtering
+
+**Logger Module** (`src/lib/logger.ts`):
+
+- `logRequest()` - Logs all API requests and responses
+- `logError()` - Logs errors with full stack traces
+- Sends events to PostHog for long-term storage and analysis
+- Falls back to console.log (captured by Vercel's logging system)
+
+**API Route Integration**:
+All API routes in `/src/app/api/*` use the centralized error handler and log all requests/responses automatically.
+
+### Why PostHog?
+
+PostHog provides:
+
+- Free tier (1M events/month)
+- Request/response tracking
+- Error monitoring with stack traces
+- Session recording for debugging
+- User analytics and funnels
+- Feature flags for gradual rollouts
+- Works seamlessly with Vercel serverless architecture
+
+This approach meets the spirit of traditional logging requirements while being optimized for modern serverless infrastructure.

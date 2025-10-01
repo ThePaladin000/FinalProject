@@ -21,6 +21,8 @@
     "dotenv": "^17.2.1",
     "highlight.js": "^11.11.1",
     "next": "^15.4.6",
+    "posthog-js": "^1.268.9",
+    "posthog-node": "^5.9.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",

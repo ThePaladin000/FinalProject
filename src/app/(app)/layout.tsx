@@ -5,6 +5,7 @@ import DesktopOnly from "@/components/DesktopOnly";
 import SidebarTreeClient from "@/components/SidebarTreeClient";
 import Link from "next/link";
 import RouteProgress from "@/components/RouteProgress";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Suspense, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
@@ -17,7 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const me = useQuery(api.queries.getMe, {});
 
   // Get user's display name from Clerk or fallback to database name
-  const displayName = user?.firstName && user?.lastName 
+  const displayName = user?.firstName && user?.lastName
     ? `${user.firstName} ${user.lastName}`
     : user?.fullName || me?.name || "User";
 
@@ -25,9 +26,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const planStatus = me?.isPaid ? "Pro" : "Free";
 
   return (
-    <AuthWrapper>
-      <DesktopOnly>
-      <div className="h-screen bg-gray-900 text-white flex overflow-hidden relative">
+    <ProtectedRoute>
+      <AuthWrapper>
+        <DesktopOnly>
+        <div className="h-screen bg-gray-900 text-white flex overflow-hidden relative">
         {/* Collapsed sidebar strip with subtle purple tint */}
         {!isSidebarOpen && (
           <div className="fixed top-0 left-0 h-full w-14 z-40 relative bg-gray-800/95 border-r border-purple-900/30 shadow-lg shadow-purple-900/10">
@@ -120,9 +122,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <RouteProgress />
           {children}
         </div>
-      </div>
-      </DesktopOnly>
-    </AuthWrapper>
+        </div>
+        </DesktopOnly>
+      </AuthWrapper>
+    </ProtectedRoute>
   );
 }
 
