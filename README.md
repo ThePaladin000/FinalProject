@@ -365,7 +365,7 @@ The `users` table exists primarily for storing user preferences and application-
 
 ## Logging and Error Handling
 
-This application implements centralized logging and error handling optimized for serverless deployment on Vercel.
+This application uses decentralized error handling with console-based logging optimized for serverless deployment on Vercel.
 
 ### Architecture
 
@@ -375,36 +375,48 @@ Since Vercel uses serverless functions with no persistent file system, all loggi
 
 - **Request Logging**: `console.log()` output captured by Vercel
 - **Error Logging**: `console.error()` output captured by Vercel
-- **Centralized Error Handler**: Implemented in `src/lib/errorHandler.ts`
-- **Logger Module**: Located in `src/lib/logger.ts` (uses console output)
+- **Individual Route Error Handling**: Each API route manages its own error handling
+- **Console-based Logging**: Direct use of console methods for all logging
 
 ### Implementation Details
 
-**Centralized Error Handler** (`src/lib/errorHandler.ts`):
+**API Route Error Handling:**
 
-- Custom error classes for different HTTP status codes
-- `handleApiError()` function for consistent error responses
-- Automatic error logging with context and metadata
-- Development vs. production error message filtering
+Each API route in `/src/app/api/*` implements its own error handling pattern:
 
-**Logger Module** (`src/lib/logger.ts`):
+- **Try-catch blocks**: Each route wraps its logic in try-catch
+- **Error logging**: `console.error()` for error details and stack traces
+- **Consistent responses**: Standardized JSON error responses with appropriate HTTP status codes
+- **Authentication handling**: Common pattern for 401 authentication errors
+- **Validation errors**: 400 status for missing required parameters
 
-- `logRequest()` - Logs all API requests and responses (server-side only)
-- `logError()` - Logs errors with full stack traces (server-side only)
-- `logInfo()` - Logs informational messages (server-side only)
-- `logWarning()` - Logs warning messages (server-side only)
-- All logger functions automatically no-op on the client side
-- All server-side output is automatically captured by Vercel's logging system
+**Error Response Pattern:**
 
-**Client-Side Console Suppression** (`src/lib/consoleOverride.ts`):
+```typescript
+try {
+  // Route logic
+} catch (error) {
+  console.error("API error:", error);
+  return NextResponse.json(
+    { error: "Descriptive error message" },
+    { status: 500 },
+  );
+}
+```
 
-- Automatically overrides all console methods in production
-- Prevents any console output from appearing in user browsers
-- Only affects production builds; development logging remains active
-- Improves security by preventing information leakage
+**Special Error Handling:**
 
-**API Route Integration**:
-All API routes in `/src/app/api/*` use the centralized error handler and log all requests/responses automatically.
+- **Chat API**: Special handling for 402 credits errors from OpenRouter
+- **Authentication**: Consistent 401 responses for missing authentication
+- **Validation**: 400 responses for missing required parameters
+- **OpenRouter Service**: Retry logic with exponential backoff for API failures
+
+**Logging Features:**
+
+- **Request/Response Logging**: Detailed logging of API requests and responses
+- **Error Context**: Full error details including stack traces
+- **Debug Information**: Extensive logging for troubleshooting
+- **Performance Tracking**: Logging of operation timing and results
 
 ### Viewing Logs on Vercel
 

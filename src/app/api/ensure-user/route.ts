@@ -39,12 +39,9 @@ export async function POST() {
       typeof errorLike.response?.status === "number"
         ? errorLike.response.status
         : 500;
-    const responseData = errorLike.response?.data ?? errorLike.data;
     return NextResponse.json(
       {
         error: "Failed to ensure user",
-        message,
-        convex: responseData,
       },
       { status }
     );
