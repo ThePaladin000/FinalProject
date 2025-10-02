@@ -14,6 +14,29 @@ A knowledge management and AI chat application that allows users to organize, se
 - **Deployment**: Vercel
 - **Logging**: Vercel's built-in logging system
 
+## Development Standards
+
+### ESLint Configuration
+
+This project uses ESLint v9 with the modern flat config format (`eslint.config.mjs`) and Next.js recommended configurations. While Airbnb's ESLint configuration is widely adopted and comprehensive, we've chosen not to implement it for the following technical reasons:
+
+**Version Compatibility Issues**: Airbnb's ESLint configuration requires ESLint v7 or v8, but this project uses ESLint v9. Implementing Airbnb config would require either:
+
+- Downgrading to an older ESLint version (creating technical debt)
+- Using `--legacy-peer-deps` flags (introducing dependency resolution issues)
+- Forcing incompatible package versions (potential security vulnerabilities)
+
+**Future-Proofing**: ESLint v9's flat config is the future standard, and maintaining compatibility with modern tooling ensures:
+
+- Better performance and faster linting
+- Access to latest ESLint features and improvements
+- Easier migration paths as the ecosystem evolves
+- Reduced maintenance burden for future updates
+
+**Next.js Optimization**: Our current configuration is specifically optimized for Next.js applications with TypeScript, providing the essential linting rules without the overhead of legacy compatibility layers.
+
+The current setup provides robust code quality enforcement while maintaining a clean, modern dependency tree and ensuring long-term project sustainability.
+
 ## How to deploy
 
 1. Clone the repository
