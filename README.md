@@ -12,7 +12,7 @@ A knowledge management and AI chat application that allows users to organize, se
 - **AI Integration**: OpenRouter API for multiple AI model access
 - **Styling**: Tailwind CSS
 - **Deployment**: Vercel
-- **Logging & Analytics**: PostHog for event tracking and error logging
+- **Logging**: Vercel's built-in logging system
 
 ## How to deploy
 
@@ -265,18 +265,18 @@ A knowledge management and AI chat application that allows users to organize, se
 
 ## Logging and Error Handling
 
-This application implements centralized logging and error handling adapted for serverless deployment on Vercel.
+This application implements centralized logging and error handling optimized for serverless deployment on Vercel.
 
 ### Architecture
 
-**Traditional vs. Serverless Approach:**
+**Serverless Logging Approach:**
 
-Since Vercel uses serverless functions (no persistent file system), we adapted the standard logging requirements:
+Since Vercel uses serverless functions with no persistent file system, all logging is done via console output which Vercel automatically captures:
 
-- **Request Logging**: Instead of `request.log` file → PostHog events + Vercel logs
-- **Error Logging**: Instead of `error.log` file → PostHog error capture + Vercel logs
+- **Request Logging**: `console.log()` output captured by Vercel
+- **Error Logging**: `console.error()` output captured by Vercel
 - **Centralized Error Handler**: Implemented in `src/lib/errorHandler.ts`
-- **Logger Module**: Located in `src/lib/logger.ts` (sends to PostHog + console)
+- **Logger Module**: Located in `src/lib/logger.ts` (uses console output)
 
 ### Implementation Details
 
@@ -289,24 +289,31 @@ Since Vercel uses serverless functions (no persistent file system), we adapted t
 
 **Logger Module** (`src/lib/logger.ts`):
 
-- `logRequest()` - Logs all API requests and responses
-- `logError()` - Logs errors with full stack traces
-- Sends events to PostHog for long-term storage and analysis
-- Falls back to console.log (captured by Vercel's logging system)
+- `logRequest()` - Logs all API requests and responses (server-side only)
+- `logError()` - Logs errors with full stack traces (server-side only)
+- `logInfo()` - Logs informational messages (server-side only)
+- `logWarning()` - Logs warning messages (server-side only)
+- All logger functions automatically no-op on the client side
+- All server-side output is automatically captured by Vercel's logging system
+
+**Client-Side Console Suppression** (`src/lib/consoleOverride.ts`):
+
+- Automatically overrides all console methods in production
+- Prevents any console output from appearing in user browsers
+- Only affects production builds; development logging remains active
+- Improves security by preventing information leakage
 
 **API Route Integration**:
 All API routes in `/src/app/api/*` use the centralized error handler and log all requests/responses automatically.
 
-### Why PostHog?
+### Viewing Logs on Vercel
 
-PostHog provides:
+To view your application logs:
 
-- Free tier (1M events/month)
-- Request/response tracking
-- Error monitoring with stack traces
-- Session recording for debugging
-- User analytics and funnels
-- Feature flags for gradual rollouts
-- Works seamlessly with Vercel serverless architecture
+1. Go to your Vercel dashboard
+2. Select your project
+3. Navigate to the "Logs" tab
+4. Filter by log level (errors, warnings, info)
+5. Search and filter by timestamp, function, or content
 
-This approach meets the spirit of traditional logging requirements while being optimized for modern serverless infrastructure.
+Vercel automatically captures all console output and provides real-time log streaming with persistent storage.

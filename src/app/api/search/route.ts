@@ -31,4 +31,4 @@ export async function POST(request: NextRequest) {
     console.error('Error searching domains:', error);
     return NextResponse.json({ error: 'Failed to search domains' }, { status: 500 });
   }
-} 
+}

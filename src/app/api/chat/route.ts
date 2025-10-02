@@ -12,7 +12,7 @@ export const fetchCache = 'force-no-store';
 
 export async function POST(request: NextRequest) {
   console.log('=== Chat API Route START ===');
-  
+
   try {
     // Auth and Convex client setup
     const { userId, getToken } = await auth();
@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     console.log('Request body:', JSON.stringify(body, null, 2));
-    
-    const { 
-      message, 
+
+    const {
+      message,
       model = 'openai/gpt-4o-mini',
       systemPrompt,
       temperature = 0.7,
@@ -99,7 +99,7 @@ Timestamp: ${new Date().toISOString()}`;
     }
 
     console.log('Calling OpenRouterService.sendConversation...');
-    
+
     // Enforce model restrictions for guests: only allow free models (creditCost === 0)
     if (!userId) {
       if (modelInfo.creditCost !== 0) {
@@ -115,7 +115,7 @@ Timestamp: ${new Date().toISOString()}`;
       temperature,
       previous_history
     );
-    
+
     // Compute shard cost using usage and model pricing
     const usage = result.usage;
     const promptTokens = usage?.prompt_tokens ?? 0;
@@ -156,7 +156,7 @@ Timestamp: ${new Date().toISOString()}`;
     console.error('Error details:', error);
     console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    
+
     // If it's a credits error, return a helpful message
     if (error instanceof Error && error.message.includes('402')) {
       console.log('Detected 402 credits error');
@@ -166,11 +166,11 @@ Timestamp: ${new Date().toISOString()}`;
         suggestion: 'Try adding ?useMock=true to test the interface'
       }, { status: 402 });
     }
-    
+
     console.log('=== Chat API Route END (Error) ===');
     return NextResponse.json(
       { error: 'Failed to process chat request' },
       { status: 500 }
     );
   }
-} 
+}

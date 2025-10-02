@@ -21,4 +21,4 @@ export async function POST(request: NextRequest) {
     console.error('Error adding entries to domain:', error);
     return NextResponse.json({ error: 'Failed to add entries to domain' }, { status: 500 });
   }
-} 
+}

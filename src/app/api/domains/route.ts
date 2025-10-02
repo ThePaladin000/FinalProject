@@ -8,10 +8,10 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type'); // 'user' or 'public'
-    
+
     // Get authenticated user ID
     const userId = await getCurrentUser();
-    
+
     if (type !== 'public' && !userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const ownerId = await requireAuth();
 
     const domainId = `domain_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Pinecone disabled - just return the domain object without storing
     const newDomain = {
       id: domainId,
@@ -75,4 +75,4 @@ export async function DELETE(request: NextRequest) {
     console.error('Error deleting domain:', error);
     return NextResponse.json({ error: 'Failed to delete domain' }, { status: 500 });
   }
-} 
+}

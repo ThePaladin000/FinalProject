@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
     const body = await request.json();
-    const { 
-      locusId, 
-      originalText, 
-      userEditedText, 
-      source, 
+    const {
+      locusId,
+      originalText,
+      userEditedText,
+      source,
       chunkType = "text",
       metaTagId,
       placementHint: placementHintFromClient
@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
 
     // metaTagId is optional; server will default to CORE if missing
     if (!locusId || !originalText) {
-      return NextResponse.json({ 
-        error: 'Locus ID and original text are required' 
+      return NextResponse.json({
+        error: 'Locus ID and original text are required'
       }, { status: 400 });
     }
 
@@ -73,18 +73,18 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
+    const {
       chunkId,
-      originalText, 
-      userEditedText, 
-      source, 
+      originalText,
+      userEditedText,
+      source,
       chunkType,
-      metaTagId 
+      metaTagId
     } = body;
 
     if (!chunkId) {
-      return NextResponse.json({ 
-        error: 'Chunk ID is required' 
+      return NextResponse.json({
+        error: 'Chunk ID is required'
       }, { status: 400 });
     }
 
@@ -120,8 +120,8 @@ export async function DELETE(request: NextRequest) {
     const chunkId = searchParams.get('chunkId');
 
     if (!chunkId) {
-      return NextResponse.json({ 
-        error: 'Chunk ID is required' 
+      return NextResponse.json({
+        error: 'Chunk ID is required'
       }, { status: 400 });
     }
 
@@ -144,4 +144,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

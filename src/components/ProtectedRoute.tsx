@@ -55,28 +55,3 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Render protected content
   return <>{children}</>;
 }
-
-/**
- * Hook to use protected route logic in components
- */
-export function useProtectedRoute() {
-  const { isSignedIn, isLoaded } = useAuth();
-  const router = useRouter();
-
-  const requireAuth = () => {
-    if (!isLoaded) return false;
-
-    if (!isSignedIn) {
-      router.push('/login');
-      return false;
-    }
-
-    return true;
-  };
-
-  return {
-    isAuthenticated: isSignedIn,
-    isLoading: !isLoaded,
-    requireAuth,
-  };
-}
