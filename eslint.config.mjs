@@ -10,6 +10,11 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // Ignore generated files and build output
+  {
+    ignores: [".next/**", "node_modules/**"],
+  },
+
   // Next.js recommended configs
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 
@@ -37,6 +42,14 @@ const eslintConfig = [
     files: ["pages/_document.tsx", "pages/_document.jsx"],
     rules: {
       "no-restricted-imports": "off",
+    },
+  },
+
+  // Disable triple-slash-reference rule for Next.js auto-generated files
+  {
+    files: ["next-env.d.ts"],
+    rules: {
+      "@typescript-eslint/triple-slash-reference": "off",
     },
   },
 ];

@@ -222,7 +222,7 @@ export const updateMyPreferences = mutation({
       modelPickerList: args.modelPickerList ?? existing.modelPickerList,
       addChunkPlacement: args.addChunkPlacement ?? existing.addChunkPlacement,
       importChunkPlacement: args.importChunkPlacement ?? existing.importChunkPlacement,
-      researchChunkPlacement: args.researchChunkPlacement ?? (existing as any).researchChunkPlacement,
+      researchChunkPlacement: args.researchChunkPlacement ?? existing.researchChunkPlacement,
       updatedAt: now,
     });
     return existing._id;
@@ -361,12 +361,12 @@ async function getNextPosition(ctx: MutationCtx, locusId: string, parentId?: str
   const existingItems = await ctx.db
     .query("locusContentItems")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .withIndex("by_locus_parent", (q: any) => 
+    .withIndex("by_locus_parent", (q: any) =>
       q.eq("locusId", locusId).eq("parentId", parentId)
     )
     .order("desc")
     .first();
-  
+
   return existingItems ? existingItems.position + 1 : 0;
 }
 
@@ -381,23 +381,23 @@ async function insertContentItemAtTop(
 ): Promise<void> {
   const now = Date.now();
   const identity = await ctx.auth.getUserIdentity();
-  
+
   // Shift all existing items down by 1
   const existingItems = await ctx.db
     .query("locusContentItems")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .withIndex("by_locus_parent", (q: any) => 
+    .withIndex("by_locus_parent", (q: any) =>
       q.eq("locusId", locusId).eq("parentId", parentId)
     )
     .collect();
-  
+
   for (const item of existingItems) {
     await ctx.db.patch(item._id, {
       position: item.position + 1,
       updatedAt: now,
     });
   }
-  
+
   // Insert the new item at position 0
   await ctx.db.insert("locusContentItems", {
     locusId,
@@ -424,7 +424,7 @@ async function appendContentItem(
   const now = Date.now();
   const nextPosition = await getNextPosition(ctx, locusId, parentId);
   const identity = await ctx.auth.getUserIdentity();
-  
+
   await ctx.db.insert("locusContentItems", {
     locusId,
     locusType,
@@ -453,24 +453,24 @@ export const reorderLocusContentItems = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    
+
     // Get all existing items for this locus, content type, and parent
     const existingItems = await ctx.db
       .query("locusContentItems")
-      .withIndex("by_locus_parent", (q) => 
+      .withIndex("by_locus_parent", (q) =>
         q.eq("locusId", args.locusId).eq("parentId", args.parentId)
       )
       .filter((q) => q.eq(q.field("contentType"), args.contentType))
       .collect();
-    
+
     // Create a map of contentId to existing item for easy lookup
     const itemMap = new Map(existingItems.map(item => [item.contentId, item]));
-    
+
     // Update positions based on the new order
     for (let i = 0; i < args.itemIds.length; i++) {
       const contentId = args.itemIds[i];
       const existingItem = itemMap.get(contentId);
-      
+
       if (existingItem) {
         await ctx.db.patch(existingItem._id, {
           position: i,
@@ -493,16 +493,16 @@ export const moveLocusContentItem = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     const item = await ctx.db.get(args.itemId);
-    
+
     if (!item) {
       throw new Error("Content item not found");
     }
-    
+
     // If moving to a new position, calculate it
-    const finalPosition = args.newPosition !== undefined 
-      ? args.newPosition 
+    const finalPosition = args.newPosition !== undefined
+      ? args.newPosition
       : await getNextPosition(ctx, args.newLocusId, args.newParentId);
-    
+
     // Update the item
     await ctx.db.patch(args.itemId, {
       locusId: args.newLocusId,
@@ -519,15 +519,15 @@ export const cleanupOldConversations = mutation({
   args: {},
   handler: async (ctx) => {
     const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
-    
+
     // Find all conversations older than 7 days
     const oldConversations = await ctx.db
       .query("conversations")
       .withIndex("by_created_at", (q) => q.lt("createdAt", sevenDaysAgo))
       .collect();
-    
+
     let deletedCount = 0;
-    
+
     // Delete each old conversation and its associated messages
     for (const conversation of oldConversations) {
       // First, delete all messages associated with this conversation
@@ -535,16 +535,16 @@ export const cleanupOldConversations = mutation({
         .query("conversationMessages")
         .withIndex("by_conversation", (q) => q.eq("conversationId", conversation._id))
         .collect();
-      
+
       for (const message of messages) {
         await ctx.db.delete(message._id);
       }
-      
+
       // Then delete the conversation itself
       await ctx.db.delete(conversation._id);
       deletedCount++;
     }
-    
+
     return { deletedCount, totalOldConversations: oldConversations.length };
   },
 });
@@ -560,7 +560,7 @@ export const assignMetaTagToChunk = mutation({
       metaTagId: args.metaTagId,
       updatedAt: Date.now(),
     });
-    
+
     // Note: Convex automatically invalidates queries when data changes
     // The UI should update automatically after this mutation
   },
@@ -603,7 +603,7 @@ export const createGuestNexus = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    
+
     // Check if there's already a guest nexus for this session (no ownerId, not the shared manual)
     const existingGuestNexi = await ctx.db
       .query("nexi")
@@ -611,11 +611,11 @@ export const createGuestNexus = mutation({
       .filter((q) => q.eq(q.field("ownerId"), undefined))
       .filter((q) => q.neq(q.field("name"), "USER MANUAL"))
       .collect();
-    
+
     if (existingGuestNexi.length > 0) {
       throw new Error("Guests can only create one nexus. Please sign in to create more.");
     }
-    
+
     // Determine next order (append to end)
     const allNexi: Doc<"nexi">[] = await ctx.db.query("nexi").collect();
     const nextOrder =
@@ -623,7 +623,7 @@ export const createGuestNexus = mutation({
         const orderValue = typeof n.order === "number" ? n.order : -1;
         return orderValue > max ? orderValue : max;
       }, -1) + 1;
-    
+
     const nexusId = await ctx.db.insert("nexi", {
       name: args.name,
       description: args.description,
@@ -887,7 +887,7 @@ export const createChunk = mutation({
       updatedAt: now,
       ownerId: args.ownerId || identity?.subject,
     });
-    
+
     // Respect user preference for placement (top/bottom)
     let placeAtTop = true;
     try {
@@ -903,7 +903,7 @@ export const createChunk = mutation({
           if (args.placementHint === "import") {
             if (user.importChunkPlacement === "bottom") placeAtTop = false;
           } else if (args.placementHint === "research") {
-            if ((user as any).researchChunkPlacement === "bottom") placeAtTop = false;
+            if (user.researchChunkPlacement === "bottom") placeAtTop = false;
           } else {
             if (user.addChunkPlacement === "bottom") placeAtTop = false;
           }
@@ -916,7 +916,7 @@ export const createChunk = mutation({
     } else {
       await appendContentItem(ctx, args.notebookId, "notebook", "chunk", chunkId, undefined);
     }
-    
+
     return chunkId;
   },
 });
@@ -981,61 +981,61 @@ export const deleteChunk = mutation({
       .withIndex("by_chunk", (q) => q.eq("chunkId", args.chunkId))
       .collect()
       .then(tags => tags.forEach(tag => ctx.db.delete(tag._id)));
-    
+
     // Delete conduits
     await ctx.db
       .query("conduits")
       .withIndex("by_source", (q) => q.eq("sourceChunkId", args.chunkId))
       .collect()
       .then(conduits => conduits.forEach(conduit => ctx.db.delete(conduit._id)));
-    
+
     await ctx.db
       .query("conduits")
       .withIndex("by_target", (q) => q.eq("targetChunkId", args.chunkId))
       .collect()
       .then(conduits => conduits.forEach(conduit => ctx.db.delete(conduit._id)));
-    
+
     // Delete jems
     await ctx.db
       .query("jems")
       .withIndex("by_chunk", (q) => q.eq("chunkId", args.chunkId))
       .collect()
       .then(jems => jems.forEach(jem => ctx.db.delete(jem._id)));
-    
+
     // Delete attachments
     await ctx.db
       .query("attachments")
       .withIndex("by_chunk", (q) => q.eq("chunkId", args.chunkId))
       .collect()
       .then(attachments => attachments.forEach(a => ctx.db.delete(a._id)));
-    
+
     // Delete chunk connections and their shadow chunks
     const connections = await ctx.db
       .query("chunkConnections")
       .withIndex("by_source", (q) => q.eq("sourceChunkId", args.chunkId))
       .collect();
-    
+
     for (const connection of connections) {
       // Delete the shadow chunk
       await ctx.db.delete(connection.shadowChunkId);
-      
+
       // Remove the shadow chunk from the target notebook's content items
       const contentItem = await ctx.db
         .query("locusContentItems")
-        .withIndex("by_content", (q) => 
+        .withIndex("by_content", (q) =>
           q.eq("contentType", "chunk").eq("contentId", connection.shadowChunkId)
         )
         .filter((q) => q.eq(q.field("locusType"), "notebook"))
         .first();
-      
+
       if (contentItem) {
         await ctx.db.delete(contentItem._id);
       }
-      
+
       // Delete the connection record
       await ctx.db.delete(connection._id);
     }
-    
+
     // Delete the chunk
     await ctx.db.delete(args.chunkId);
   },
@@ -1084,37 +1084,37 @@ export const moveChunk = mutation({
   },
   handler: async (ctx, args) => {
     const { chunkId, targetNotebookId } = args;
-    
+
     // Get the current chunk to verify it exists
     const chunk = await ctx.db.get(chunkId);
     if (!chunk) {
       throw new Error("Chunk not found");
     }
-    
+
     // Get the target notebook to verify it exists
     const targetNotebook = await ctx.db.get(targetNotebookId);
     if (!targetNotebook) {
       throw new Error("Target notebook not found");
     }
-    
+
     // Update the chunk's notebook ID
     await ctx.db.patch(chunkId, {
       notebookId: targetNotebookId,
       updatedAt: Date.now(),
     });
-    
+
     // Remove the chunk from the old notebook's locus content items
     const oldLocusItems = await ctx.db
       .query("locusContentItems")
-      .withIndex("by_content", (q) => 
+      .withIndex("by_content", (q) =>
         q.eq("contentType", "chunk").eq("contentId", chunkId)
       )
       .collect();
-    
+
     for (const item of oldLocusItems) {
       await ctx.db.delete(item._id);
     }
-    
+
     // Add the chunk to the new notebook's locus content items at the end
     await appendContentItem(
       ctx,
@@ -1133,25 +1133,25 @@ export const moveChunkToTop = mutation({
   },
   handler: async (ctx, args) => {
     const { chunkId } = args;
-    
+
     // Get the current chunk to verify it exists and get its notebook
     const chunk = await ctx.db.get(chunkId);
     if (!chunk) {
       throw new Error("Chunk not found");
     }
-    
+
     // Remove the chunk from its current position in locus content items
     const currentLocusItems = await ctx.db
       .query("locusContentItems")
-      .withIndex("by_content", (q) => 
+      .withIndex("by_content", (q) =>
         q.eq("contentType", "chunk").eq("contentId", chunkId)
       )
       .collect();
-    
+
     for (const item of currentLocusItems) {
       await ctx.db.delete(item._id);
     }
-    
+
     // Add the chunk to the top of the notebook
     await insertContentItemAtTop(
       ctx,
@@ -1170,25 +1170,25 @@ export const moveChunkToBottom = mutation({
   },
   handler: async (ctx, args) => {
     const { chunkId } = args;
-    
+
     // Get the current chunk to verify it exists and get its notebook
     const chunk = await ctx.db.get(chunkId);
     if (!chunk) {
       throw new Error("Chunk not found");
     }
-    
+
     // Remove the chunk from its current position in locus content items
     const currentLocusItems = await ctx.db
       .query("locusContentItems")
-      .withIndex("by_content", (q) => 
+      .withIndex("by_content", (q) =>
         q.eq("contentType", "chunk").eq("contentId", chunkId)
       )
       .collect();
-    
+
     for (const item of currentLocusItems) {
       await ctx.db.delete(item._id);
     }
-    
+
     // Add the chunk to the bottom of the notebook
     await appendContentItem(
       ctx,
@@ -1235,7 +1235,7 @@ export const deleteNexus = mutation({
         .query("chunks")
         .withIndex("by_notebook", (q) => q.eq("notebookId", notebook._id))
         .collect();
-      
+
       for (const chunk of chunks) {
         // Delete chunk tags
         await ctx.db
@@ -1243,27 +1243,27 @@ export const deleteNexus = mutation({
           .withIndex("by_chunk", (q) => q.eq("chunkId", chunk._id))
           .collect()
           .then(tags => tags.forEach(tag => ctx.db.delete(tag._id)));
-        
+
         // Delete conduits
         await ctx.db
           .query("conduits")
           .withIndex("by_source", (q) => q.eq("sourceChunkId", chunk._id))
           .collect()
           .then(conduits => conduits.forEach(conduit => ctx.db.delete(conduit._id)));
-        
+
         await ctx.db
           .query("conduits")
           .withIndex("by_target", (q) => q.eq("targetChunkId", chunk._id))
           .collect()
           .then(conduits => conduits.forEach(conduit => ctx.db.delete(conduit._id)));
-        
+
         // Delete jems
         await ctx.db
           .query("jems")
           .withIndex("by_chunk", (q) => q.eq("chunkId", chunk._id))
           .collect()
           .then(jems => jems.forEach(jem => ctx.db.delete(jem._id)));
-        
+
         // Delete the chunk
         await ctx.db.delete(chunk._id);
       }
@@ -1273,7 +1273,7 @@ export const deleteNexus = mutation({
         .query("tags")
         .withIndex("by_notebook", (q) => q.eq("notebookId", notebook._id))
         .collect();
-      
+
       for (const tag of tags) {
         await ctx.db.delete(tag._id);
       }
@@ -1322,7 +1322,7 @@ export const deleteNotebook = mutation({
       .query("chunks")
       .withIndex("by_notebook", (q) => q.eq("notebookId", args.notebookId))
       .collect();
-    
+
     for (const chunk of chunks) {
       // Delete chunk tags
       await ctx.db
@@ -1330,27 +1330,27 @@ export const deleteNotebook = mutation({
         .withIndex("by_chunk", (q) => q.eq("chunkId", chunk._id))
         .collect()
         .then(tags => tags.forEach(tag => ctx.db.delete(tag._id)));
-      
+
       // Delete conduits
       await ctx.db
         .query("conduits")
         .withIndex("by_source", (q) => q.eq("sourceChunkId", chunk._id))
         .collect()
         .then(conduits => conduits.forEach(conduit => ctx.db.delete(conduit._id)));
-      
+
       await ctx.db
         .query("conduits")
         .withIndex("by_target", (q) => q.eq("targetChunkId", chunk._id))
         .collect()
         .then(conduits => conduits.forEach(conduit => ctx.db.delete(conduit._id)));
-      
+
       // Delete jems
       await ctx.db
         .query("jems")
         .withIndex("by_chunk", (q) => q.eq("chunkId", chunk._id))
         .collect()
         .then(jems => jems.forEach(jem => ctx.db.delete(jem._id)));
-      
+
       // Delete the chunk
       await ctx.db.delete(chunk._id);
     }
@@ -1360,7 +1360,7 @@ export const deleteNotebook = mutation({
       .query("tags")
       .withIndex("by_notebook", (q) => q.eq("notebookId", args.notebookId))
       .collect();
-    
+
     for (const tag of tags) {
       await ctx.db.delete(tag._id);
     }
@@ -1409,7 +1409,7 @@ export const addConversationMessage = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     const identity = await ctx.auth.getUserIdentity();
-    
+
     // Add the message
     const messageId = await ctx.db.insert("conversationMessages", {
       conversationId: args.conversationId,
@@ -1431,7 +1431,7 @@ export const addConversationMessage = mutation({
       updatedAt: now,
     });
   },
-}); 
+});
 
 // Assign tags to a chunk
 export const assignTagsToChunk = mutation({
@@ -1445,7 +1445,7 @@ export const assignTagsToChunk = mutation({
       .query("chunkTags")
       .withIndex("by_chunk", (q) => q.eq("chunkId", args.chunkId))
       .collect();
-    
+
     for (const tag of existingTags) {
       await ctx.db.delete(tag._id);
     }
@@ -1521,12 +1521,12 @@ export const updateTag = mutation({
     } = {
       updatedAt: Date.now(),
     };
-    
+
     if (args.name !== undefined) updateData.name = args.name;
     if (args.description !== undefined) updateData.description = args.description;
     if (args.parentTagId !== undefined) updateData.parentTagId = args.parentTagId;
     if (args.color !== undefined) updateData.color = args.color;
-    
+
     await ctx.db.patch(args.tagId, updateData);
   },
 });
@@ -1542,11 +1542,11 @@ export const deleteTag = mutation({
       .query("chunkTags")
       .withIndex("by_tag", (q) => q.eq("tagId", args.tagId))
       .collect();
-    
+
     for (const chunkTag of chunkTags) {
       await ctx.db.delete(chunkTag._id);
     }
-    
+
     // Then delete the tag itself
     await ctx.db.delete(args.tagId);
   },
@@ -1667,7 +1667,7 @@ export const updatePromptTemplate = mutation({
     } = {
       updatedAt: Date.now(),
     };
-    
+
     if (args.name !== undefined) updateData.name = args.name;
     if (args.description !== undefined) updateData.description = args.description;
     if (args.templateContent !== undefined) updateData.templateContent = args.templateContent;
@@ -1676,7 +1676,7 @@ export const updatePromptTemplate = mutation({
     if (args.tagIds !== undefined) updateData.tagIds = args.tagIds;
     if (args.placeholders !== undefined) updateData.placeholders = args.placeholders;
     if (args.llmConfig !== undefined) updateData.llmConfig = args.llmConfig;
-    
+
     await ctx.db.patch(args.templateId, updateData);
   },
 });
@@ -1701,9 +1701,9 @@ export const incrementPromptTemplateUsage = mutation({
     if (!template) {
       throw new Error("Prompt template not found");
     }
-    
+
     const currentUsageCount = template.usageCount || 0;
-    
+
     await ctx.db.patch(args.templateId, {
       usageCount: currentUsageCount + 1,
       lastUsedAt: Date.now(),
@@ -1722,30 +1722,30 @@ export const createChunkConnection = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     const identity = await ctx.auth.getUserIdentity();
-    
+
     // Get the source chunk
     const sourceChunk = await ctx.db.get(args.sourceChunkId);
     if (!sourceChunk) {
       throw new Error("Source chunk not found");
     }
-    
+
     // Get the target notebook
     const targetNotebook = await ctx.db.get(args.targetNotebookId);
     if (!targetNotebook) {
       throw new Error("Target notebook not found");
     }
-    
+
     // Check if connection already exists
     const existingConnection = await ctx.db
       .query("chunkConnections")
       .withIndex("by_source", (q) => q.eq("sourceChunkId", args.sourceChunkId))
       .filter((q) => q.eq(q.field("targetNotebookId"), args.targetNotebookId))
       .first();
-    
+
     if (existingConnection) {
       throw new Error("Connection already exists between this chunk and notebook");
     }
-    
+
     // Create a shadow chunk in the target notebook
     const shadowChunkId = await ctx.db.insert("chunks", {
       notebookId: args.targetNotebookId,
@@ -1758,7 +1758,7 @@ export const createChunkConnection = mutation({
       updatedAt: now,
       ownerId: identity?.subject,
     });
-    
+
     // Add the shadow chunk to the target notebook's content items
     await appendContentItem(
       ctx,
@@ -1768,7 +1768,7 @@ export const createChunkConnection = mutation({
       shadowChunkId,
       undefined
     );
-    
+
     // Create the connection record
     const connectionId = await ctx.db.insert("chunkConnections", {
       sourceChunkId: args.sourceChunkId,
@@ -1778,7 +1778,7 @@ export const createChunkConnection = mutation({
       createdAt: now,
       ownerId: identity?.subject,
     });
-    
+
     return { connectionId, shadowChunkId };
   },
 });
@@ -1793,23 +1793,23 @@ export const deleteChunkConnection = mutation({
     if (!connection) {
       throw new Error("Connection not found");
     }
-    
+
     // Delete the shadow chunk
     await ctx.db.delete(connection.shadowChunkId);
-    
+
     // Remove the shadow chunk from the target notebook's content items
     const contentItem = await ctx.db
       .query("locusContentItems")
-      .withIndex("by_content", (q) => 
+      .withIndex("by_content", (q) =>
         q.eq("contentType", "chunk").eq("contentId", connection.shadowChunkId)
       )
       .filter((q) => q.eq(q.field("locusType"), "notebook"))
       .first();
-    
+
     if (contentItem) {
       await ctx.db.delete(contentItem._id);
     }
-    
+
     // Delete the connection record
     await ctx.db.delete(args.connectionId);
   },
@@ -1820,9 +1820,9 @@ export const updateConversationTitles = mutation({
   args: {},
   handler: async (ctx) => {
     const conversations = await ctx.db.query("conversations").collect();
-    
+
     let updatedCount = 0;
-    
+
     for (const conversation of conversations) {
       // Check if the title uses the old format
       if (conversation.title && conversation.title.startsWith('Conversation about ')) {
@@ -1832,25 +1832,25 @@ export const updateConversationTitles = mutation({
           .withIndex("by_conversation", (q) => q.eq("conversationId", conversation._id))
           .order("asc")
           .first();
-        
+
         if (firstMessage) {
           // Generate a better title from the first message
           const betterTitle = generateFallbackTitle(firstMessage.question);
-          
+
           await ctx.db.patch(conversation._id, {
             title: betterTitle,
             updatedAt: Date.now(),
           });
-          
+
           updatedCount++;
           console.log(`Updated conversation title from "${conversation.title}" to "${betterTitle}"`);
         }
       }
     }
-    
-    return { 
-      updatedCount, 
-      totalConversations: conversations.length 
+
+    return {
+      updatedCount,
+      totalConversations: conversations.length
     };
   },
 });
@@ -1859,23 +1859,23 @@ export const updateConversationTitles = mutation({
 function generateFallbackTitle(message: string): string {
   // Remove common prefixes and clean up the message
   let cleanedMessage = message.trim();
-  
+
   // Remove common prefixes
   const prefixesToRemove = [
-    'explain', 'what is', 'how does', 'tell me about', 'describe', 
+    'explain', 'what is', 'how does', 'tell me about', 'describe',
     'analyze', 'discuss', 'compare', 'contrast', 'summarize'
   ];
-  
+
   for (const prefix of prefixesToRemove) {
     if (cleanedMessage.toLowerCase().startsWith(prefix.toLowerCase())) {
       cleanedMessage = cleanedMessage.substring(prefix.length).trim();
       break;
     }
   }
-  
+
   // Remove punctuation at the beginning
   cleanedMessage = cleanedMessage.replace(/^[.,!?;:]+/, '').trim();
-  
+
   // If the cleaned message is still too long, truncate it
   if (cleanedMessage.length > 60) {
     // Try to find a good breaking point (end of a word)
@@ -1887,14 +1887,13 @@ function generateFallbackTitle(message: string): string {
       cleanedMessage = truncated + '...';
     }
   }
-  
+
   // If we have a meaningful title, use it
   if (cleanedMessage.length > 10) {
     return cleanedMessage;
   }
-  
+
   // Final fallback
   return `Research: ${message.substring(0, 40)}...`;
 }
 
- 

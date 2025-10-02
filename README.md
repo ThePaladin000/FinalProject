@@ -16,6 +16,51 @@ A knowledge management and AI chat application that allows users to organize, se
 
 ## Development Standards
 
+### Authentication Architecture
+
+This project uses **Clerk** for authentication rather than implementing custom email/password authentication. This is an intentional architectural decision based on several key factors:
+
+**Security & Maintenance Benefits:**
+
+- **Battle-tested security**: Clerk handles password hashing, rate limiting, CSRF protection, and session management with industry-standard security practices
+- **Reduced attack surface**: No custom authentication code means fewer potential security vulnerabilities in our codebase
+- **Automatic security updates**: Clerk continuously updates their security measures without requiring code changes
+- **Compliance handling**: Clerk manages GDPR, SOC2, and other compliance requirements automatically
+
+**Developer Experience:**
+
+- **Minimal code maintenance**: Authentication logic is ~10 lines vs hundreds required for custom implementation
+- **Built-in features**: Password reset, email verification, user management dashboard, and social logins work out of the box
+- **Type safety**: Excellent TypeScript integration with proper type definitions
+- **Documentation**: Comprehensive, well-maintained documentation and community support
+
+**User Experience:**
+
+- **Social logins**: Users can sign in with Google, GitHub, Microsoft, etc. (significantly better conversion rates)
+- **Seamless account management**: Users can update profiles, change passwords, and manage security settings through Clerk's UI
+- **Mobile optimization**: Clerk provides optimized authentication flows for mobile devices
+- **Multi-factor authentication**: Built-in MFA support without additional implementation
+
+**Technical Integration:**
+
+- **Convex compatibility**: Clerk's JWT tokens work seamlessly with Convex's authentication system
+- **Performance**: No additional database queries for user lookups - Clerk handles user data efficiently
+- **Scalability**: Clerk's infrastructure scales automatically with user growth
+- **API design**: Our API routes use Clerk's `auth()` function for clean, consistent authentication checks
+
+**Why Not Custom Authentication:**
+
+While custom authentication might seem simpler initially, it introduces significant complexity:
+
+- Password security (hashing, salting, timing attacks)
+- Session management (JWT handling, refresh tokens, revocation)
+- Rate limiting and brute force protection
+- Email verification and password reset flows
+- Security audit requirements
+- Ongoing maintenance and security updates
+
+The time saved by using Clerk (hundreds of hours) far outweighs any perceived benefits of custom authentication, while providing superior security and user experience.
+
 ### ESLint Configuration
 
 This project uses ESLint v9 with the modern flat config format (`eslint.config.mjs`) and Next.js recommended configurations. While Airbnb's ESLint configuration is widely adopted and comprehensive, we've chosen not to implement it for the following technical reasons:
@@ -36,6 +81,38 @@ This project uses ESLint v9 with the modern flat config format (`eslint.config.m
 **Next.js Optimization**: Our current configuration is specifically optimized for Next.js applications with TypeScript, providing the essential linting rules without the overhead of legacy compatibility layers.
 
 The current setup provides robust code quality enforcement while maintaining a clean, modern dependency tree and ensuring long-term project sustainability.
+
+### Database Design: User Ownership Pattern
+
+This project uses `ownerId: v.optional(v.string())` throughout the schema rather than foreign key references like `userId: v.id("users")`. This is an intentional design decision optimized for Clerk authentication integration.
+
+**Why We Use Clerk User IDs Directly:**
+
+**Performance Benefits:**
+
+- Direct string comparison for ownership checks (no extra lookups required)
+- Faster queries - no need to join with users table for simple ownership filtering
+- Reduced database operations - every mutation would otherwise require an additional user lookup
+
+**Architectural Simplicity:**
+
+- Clerk user IDs are already available in authentication context
+- No mapping layer needed between Clerk IDs and internal user IDs
+- Simpler codebase with fewer potential points of failure
+
+**Clerk Integration Best Practices:**
+
+- Clerk IDs are stable, unique identifiers designed for external storage
+- This pattern is recommended in Clerk documentation for multi-tenant applications
+- Aligns with Clerk's authentication paradigm
+
+**Convex Compatibility:**
+
+- Convex doesn't enforce referential integrity on foreign keys anyway
+- String-based ownership filtering is well-indexed and performant
+- No loss of functionality compared to using `_id` references
+
+The `users` table exists primarily for storing user preferences and application-specific metadata (like shard balances and model preferences), not as a join table for ownership relationships. This keeps the ownership model simple, fast, and directly aligned with our authentication provider.
 
 ## How to deploy
 

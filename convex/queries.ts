@@ -1,6 +1,6 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
+import { Id, Doc } from "./_generated/dataModel";
 
 // Return the shared USER MANUAL nexus (ownerId undefined), if present
 export const getSharedManualNexus = query({
@@ -10,7 +10,7 @@ export const getSharedManualNexus = query({
       .query("nexi")
       .filter((q) => q.eq(q.field("name"), "USER MANUAL"))
       .collect();
-    const sharedManual = manuals.find((n) => (n as any).ownerId === undefined) || null;
+    const sharedManual = manuals.find((n) => n.ownerId === undefined) || null;
     return sharedManual;
   },
 });
@@ -94,7 +94,7 @@ export const getMetaTags = query({
   handler: async (ctx, args) => {
     const all = await ctx.db.query("metaTags").order("asc").collect();
     if (!args.ownerId) return all;
-    return all.filter(mt => (mt.ownerId === args.ownerId) || (mt.ownerId === undefined && (mt as any).isSystem === true));
+    return all.filter(mt => (mt.ownerId === args.ownerId) || (mt.ownerId === undefined && mt.isSystem === true));
   },
 });
 
@@ -115,8 +115,8 @@ export const getSystemMetaTags = query({
 export const getNexi = query({
   args: { ownerId: v.optional(v.string()), guestSessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    let userNexi: any[] = [];
-    
+    let userNexi: Doc<"nexi">[] = [];
+
     if (args.ownerId) {
       // For authenticated users, get their owned nexi
       userNexi = await ctx.db
@@ -143,7 +143,7 @@ export const getNexi = query({
         .query("nexi")
         .filter((q) => q.eq(q.field("name"), "USER MANUAL"))
         .collect();
-      sharedManual = manuals.find((n) => (n as any).ownerId === undefined) || null;
+      sharedManual = manuals.find((n) => n.ownerId === undefined) || null;
     } catch {
       sharedManual = null;
     }
@@ -153,8 +153,8 @@ export const getNexi = query({
       : userNexi;
     // Sort by explicit order if present; fallback to updatedAt desc
     return combined.sort((a, b) => {
-      const ao = (a as any).order;
-      const bo = (b as any).order;
+      const ao = a.order;
+      const bo = b.order;
       if (typeof ao === "number" && typeof bo === "number") return ao - bo;
       if (typeof ao === "number") return -1; // ordered nexi first
       if (typeof bo === "number") return 1;
@@ -198,7 +198,7 @@ export const getTagsByNotebook = query({
       const notebook = await ctx.db.get(args.notebookId);
       if (notebook) {
         const nexus = await ctx.db.get(notebook.nexusId);
-        isSharedNexus = !!nexus && (nexus as any).ownerId === undefined;
+        isSharedNexus = !!nexus && nexus.ownerId === undefined;
       }
     } catch {
       isSharedNexus = false;
@@ -223,7 +223,7 @@ export const getChunksByNotebook = query({
       const notebook = await ctx.db.get(args.notebookId);
       if (notebook) {
         const nexus = await ctx.db.get(notebook.nexusId);
-        isSharedNexus = !!nexus && (nexus as any).ownerId === undefined;
+        isSharedNexus = !!nexus && nexus.ownerId === undefined;
       }
     } catch {
       isSharedNexus = false;
@@ -231,7 +231,7 @@ export const getChunksByNotebook = query({
     // Get the content items for chunks in this locus, ordered by position
     const contentItems = await ctx.db
       .query("locusContentItems")
-      .withIndex("by_locus_and_type", (q) => 
+      .withIndex("by_locus_and_type", (q) =>
         q.eq("locusId", args.notebookId).eq("contentType", "chunk")
       )
       .filter((q) => q.eq(q.field("locusType"), "notebook"))
@@ -246,24 +246,24 @@ export const getChunksByNotebook = query({
         const chunk = await ctx.db.get(item.contentId as Id<"chunks">);
         if (!chunk) return null;
         if (!isSharedNexus && args.ownerId && !(chunk.ownerId === args.ownerId || chunk.ownerId === undefined)) return null;
-        
+
         const metaTag = chunk.metaTagId ? await ctx.db.get(chunk.metaTagId) : null;
-        
+
         // Get tags for this chunk
         const chunkTags = await ctx.db
           .query("chunkTags")
           .withIndex("by_chunk", (q) => q.eq("chunkId", chunk._id))
           .collect();
-        
+
         const tags = await Promise.all(
           chunkTags.map(async (chunkTag) => {
             const tag = await ctx.db.get(chunkTag.tagId);
             return tag;
           })
         );
-        
+
         const validTags = tags.filter(tag => tag !== null);
-        
+
         return {
           ...chunk,
           metaTag,
@@ -288,7 +288,7 @@ export const getNotebookView = query({
       const notebook = await ctx.db.get(args.notebookId);
       if (notebook) {
         const nexus = await ctx.db.get(notebook.nexusId);
-        isSharedNexus = !!nexus && (nexus as any).ownerId === undefined;
+        isSharedNexus = !!nexus && nexus.ownerId === undefined;
       }
     } catch {
       isSharedNexus = false;
@@ -325,17 +325,17 @@ export const getNotebookView = query({
 
           const validTags = tags.filter((t) => t !== null);
 
-          return {
-            ...chunk,
-            metaTag,
-            tags: validTags,
-            _locusPosition: item.position,
-          } as any;
+        return {
+          ...chunk,
+          metaTag,
+          tags: validTags,
+          _locusPosition: item.position,
+        };
         })
       )
-    ).filter((c) => c !== null);
+    ).filter((c) => c !== null) as Doc<"chunks">[];
 
-    const chunkIds: Id<"chunks">[] = chunks.map((c: any) => c._id);
+    const chunkIds: Id<"chunks">[] = chunks.map((c) => c._id);
 
     // Attachments map per chunk (scoped by owner if applicable)
     const attachments: Record<string, Array<{ _id: Id<"attachments">; name: string; url: string; createdAt: number }>> = {};
@@ -366,7 +366,7 @@ export const getNotebookView = query({
     // Meta tags for selector
     const allMeta = await ctx.db.query("metaTags").order("asc").collect();
     const metaTags = args.ownerId
-      ? allMeta.filter((mt) => (mt as any).ownerId === args.ownerId || (mt as any).ownerId === undefined)
+      ? allMeta.filter((mt) => mt.ownerId === args.ownerId || mt.ownerId === undefined)
       : allMeta;
 
     return { chunks, attachments, counts, metaTags };
@@ -382,7 +382,7 @@ export const getNotebookViewPage = query({
       const notebook = await ctx.db.get(args.notebookId);
       if (notebook) {
         const nexus = await ctx.db.get(notebook.nexusId);
-        isSharedNexus = !!nexus && (nexus as any).ownerId === undefined;
+        isSharedNexus = !!nexus && nexus.ownerId === undefined;
       }
     } catch {
       isSharedNexus = false;
@@ -435,17 +435,17 @@ export const getNotebookViewPage = query({
 
           const validTags = tags.filter((t) => t !== null);
 
-          return {
-            ...chunk,
-            metaTag,
-            tags: validTags,
-            _locusPosition: item.position,
-          } as any;
+        return {
+          ...chunk,
+          metaTag,
+          tags: validTags,
+          _locusPosition: item.position,
+        };
         })
       )
-    ).filter((c) => c !== null);
+    ).filter((c) => c !== null) as Doc<"chunks">[];
 
-    const chunkIds: Id<"chunks">[] = chunks.map((c: any) => c._id);
+    const chunkIds: Id<"chunks">[] = chunks.map((c) => c._id);
 
     // Attachments map per chunk (scoped by owner if applicable)
     const attachments: Record<string, Array<{ _id: Id<"attachments">; name: string; url: string; createdAt: number }>> = {};
@@ -476,7 +476,7 @@ export const getNotebookViewPage = query({
     // Meta tags for selector
     const allMeta = await ctx.db.query("metaTags").order("asc").collect();
     const metaTags = args.ownerId
-      ? allMeta.filter((mt) => (mt as any).ownerId === args.ownerId || (mt as any).ownerId === undefined)
+      ? allMeta.filter((mt) => mt.ownerId === args.ownerId || mt.ownerId === undefined)
       : allMeta;
 
     return { chunks, attachments, counts, metaTags, totalChunks };
@@ -495,7 +495,7 @@ export const getChunksByTag = query({
         const notebook = await ctx.db.get(tag.notebookId);
         if (notebook) {
           const nexus = await ctx.db.get(notebook.nexusId);
-          isSharedNexus = !!nexus && (nexus as any).ownerId === undefined;
+          isSharedNexus = !!nexus && nexus.ownerId === undefined;
         }
       }
     } catch {
@@ -520,23 +520,23 @@ export const getChunksByTag = query({
     const chunksWithMetaTags = await Promise.all(
       validChunks.map(async (chunk) => {
         const metaTag = chunk!.metaTagId ? await ctx.db.get(chunk!.metaTagId) : null;
-        if (!isSharedNexus && args.ownerId && !(chunk!.ownerId === args.ownerId || chunk!.ownerId === undefined)) return null as any;
-        
+        if (!isSharedNexus && args.ownerId && !(chunk!.ownerId === args.ownerId || chunk!.ownerId === undefined)) return null;
+
         // Get all tags for this chunk
         const chunkTagsForChunk = await ctx.db
           .query("chunkTags")
           .withIndex("by_chunk", (q) => q.eq("chunkId", chunk!._id))
           .collect();
-        
+
         const tags = await Promise.all(
           chunkTagsForChunk.map(async (chunkTag) => {
             const tag = await ctx.db.get(chunkTag.tagId);
             return tag;
           })
         );
-        
+
         const validTags = tags.filter(tag => tag !== null);
-        
+
         return {
           ...chunk!,
           metaTag,
@@ -560,7 +560,7 @@ export const getChunksByTagPage = query({
         const notebook = await ctx.db.get(tag.notebookId);
         if (notebook) {
           const nexus = await ctx.db.get(notebook.nexusId);
-          isSharedNexus = !!nexus && (nexus as any).ownerId === undefined;
+          isSharedNexus = !!nexus && nexus.ownerId === undefined;
         }
       }
     } catch {
@@ -599,7 +599,7 @@ export const getChunksByTagPage = query({
           .collect();
         const tags = await Promise.all(ctForChunk.map(async (ct) => ctx.db.get(ct.tagId)));
         const validTags = tags.filter((t) => t !== null);
-        return { ...chunk, metaTag, tags: validTags } as any;
+        return { ...chunk, metaTag, tags: validTags };
       })
     );
 
@@ -642,7 +642,7 @@ export const getChunkIndexInNotebook = query({
       const notebook = await ctx.db.get(args.notebookId);
       if (notebook) {
         const nexus = await ctx.db.get(notebook.nexusId);
-        isSharedNexus = !!nexus && (nexus as any).ownerId === undefined;
+        isSharedNexus = !!nexus && nexus.ownerId === undefined;
       }
     } catch {
       isSharedNexus = false;
@@ -681,7 +681,7 @@ export const getChunkIndexInTag = query({
         const notebook = await ctx.db.get(tag.notebookId);
         if (notebook) {
           const nexus = await ctx.db.get(notebook.nexusId);
-          isSharedNexus = !!nexus && (nexus as any).ownerId === undefined;
+          isSharedNexus = !!nexus && nexus.ownerId === undefined;
         }
       }
     } catch {
@@ -706,7 +706,7 @@ export const getChunkIndexInTag = query({
 export const getCompleteTree = query({
   args: { ownerId: v.optional(v.string()), guestSessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    let nexi: any[] = [];
+    let nexi: Doc<"nexi">[] = [];
     if (args.ownerId) {
       const userNexi = await ctx.db
         .query("nexi")
@@ -721,7 +721,7 @@ export const getCompleteTree = query({
         .filter((q) => q.eq(q.field("name"), "USER MANUAL"))
         .filter((q) => q.eq(q.field("ownerId"), undefined))
         .first();
-      
+
       const guestNexi = await ctx.db
         .query("nexi")
         .withIndex("by_guest_session", q => q.eq("guestSessionId", args.guestSessionId))
@@ -729,7 +729,7 @@ export const getCompleteTree = query({
         .filter((q) => q.neq(q.field("name"), "USER MANUAL"))
         .order("desc")
         .collect();
-      
+
       nexi = sharedManual ? [sharedManual, ...guestNexi] : guestNexi;
     } else {
       // No ownerId or guestSessionId provided, return empty array
@@ -762,9 +762,31 @@ export const getCompleteTree = query({
               })
             );
 
+            // Get all tags for this notebook
+            const allTags = await ctx.db
+              .query("tags")
+              .withIndex("by_notebook", q => q.eq("notebookId", notebook._id))
+              .order("asc")
+              .collect();
+
+            // Separate top-level tags (no parent) from child tags
+            const topLevelTags = allTags.filter(tag => !tag.parentTagId);
+
+            // Build tag structure with child tags
+            const tagsWithChildren = await Promise.all(
+              topLevelTags.map(async (tag) => {
+                const childTags = allTags.filter(t => t.parentTagId === tag._id);
+                return {
+                  ...tag,
+                  childTags,
+                };
+              })
+            );
+
             return {
               ...notebook,
               chunks: chunkData,
+              tags: tagsWithChildren,
             };
           })
         );
@@ -786,9 +808,9 @@ export const getNexusWithData = query({
   handler: async (ctx, args) => {
     const nexus = await ctx.db.get(args.nexusId);
     if (!nexus) return null;
-    
+
     const isShared = nexus.ownerId === undefined; // shared/public
-    
+
     if (args.ownerId) {
       const isOwner = nexus.ownerId === args.ownerId;
       if (!isOwner && !isShared) {
@@ -866,10 +888,10 @@ export const searchChunks = query({
     const chunks = args.ownerId
       ? await ctx.db.query("chunks").withIndex("by_owner", q => q.eq("ownerId", args.ownerId)).collect()
       : await ctx.db.query("chunks").collect();
-    
+
     // Simple case-insensitive search
     const searchLower = args.searchTerm.toLowerCase();
-    const filteredChunks = chunks.filter(chunk => 
+    const filteredChunks = chunks.filter(chunk =>
       chunk.originalText.toLowerCase().includes(searchLower) ||
       chunk.userEditedText?.toLowerCase().includes(searchLower) ||
       chunk.title?.toLowerCase().includes(searchLower)
@@ -888,7 +910,7 @@ export const searchChunks = query({
 
     return chunksWithMetaTags;
   },
-}); 
+});
 
 // Get tags assigned to a specific chunk
 export const getTagsByChunk = query({
@@ -915,7 +937,7 @@ export const getTagsByChunk = query({
 
 // Search within a specific nexus (all notebooks and chunks)
 export const searchNexus = query({
-  args: { 
+  args: {
     nexusId: v.id("nexi"),
     searchTerm: v.string(),
     ownerId: v.optional(v.string())
@@ -1042,7 +1064,7 @@ export const searchNexus = query({
       for (const chunk of scopedChunks) {
         const chunkText = chunk.userEditedText || chunk.originalText;
         const chunkTitle = chunk.title || '';
-        
+
         let chunkMatch: {
           type: 'chunk';
           id: string;
@@ -1056,7 +1078,7 @@ export const searchNexus = query({
         let bestScore = Infinity;
         let bestContent = '';
         let bestName = '';
-        
+
         // Check content match
         if (chunkText.toLowerCase().includes(searchLower)) {
           const score = chunkText.toLowerCase().indexOf(searchLower);
@@ -1076,7 +1098,7 @@ export const searchNexus = query({
             };
           }
         }
-        
+
         // Check title match
         if (chunkTitle.toLowerCase().includes(searchLower)) {
           const score = chunkTitle.toLowerCase().indexOf(searchLower);
@@ -1096,7 +1118,7 @@ export const searchNexus = query({
             };
           }
         }
-        
+
         // Add the best match for this chunk
         if (chunkMatch) {
           results.push(chunkMatch);
@@ -1167,40 +1189,40 @@ export const getAllTagsForManager = query({
     const allTags = args.ownerId
       ? await ctx.db.query("tags").withIndex("by_owner", q => q.eq("ownerId", args.ownerId)).collect()
       : await ctx.db.query("tags").collect();
-    
+
     // Fetch additional information for each tag
     const tagsWithInfo = await Promise.all(
       allTags.map(async (tag) => {
         // Get parent tag info
         const parentTag = tag.parentTagId ? await ctx.db.get(tag.parentTagId) : null;
-        
+
         // Get origin notebook and nexus info
         const originNotebook = tag.originNotebookId ? await ctx.db.get(tag.originNotebookId) : null;
         const originNexus = tag.originNexusId ? await ctx.db.get(tag.originNexusId) : null;
-        
+
         // Get current notebook and nexus info
         const currentNotebook = await ctx.db.get(tag.notebookId);
         const currentNexus = currentNotebook ? await ctx.db.get(currentNotebook.nexusId) : null;
-        
+
         // Count usage across all chunks
         const chunkTags = await ctx.db
           .query("chunkTags")
           .withIndex("by_tag", (q) => q.eq("tagId", tag._id))
           .collect();
-        
+
         // Get detailed usage information
         const usageInfo = await Promise.all(
           chunkTags.map(async (chunkTag) => {
             const chunk = await ctx.db.get(chunkTag.chunkId);
             if (!chunk) return null;
             if (args.ownerId && chunk.ownerId !== args.ownerId) return null;
-            
+
             const notebook = await ctx.db.get(chunk.notebookId);
             if (!notebook) return null;
-            
+
             const nexus = await ctx.db.get(notebook.nexusId);
             if (!nexus) return null;
-            
+
             return {
               chunkId: chunk._id,
               chunkTitle: chunk.title,
@@ -1212,13 +1234,13 @@ export const getAllTagsForManager = query({
             };
           })
         );
-        
+
         // Group usage by nexus and notebook
         const usageByLocation = usageInfo
           .filter(info => info !== null)
           .reduce((acc, info) => {
             if (!info) return acc;
-            
+
             const nexusKey = `${info.nexusId}-${info.nexusName}`;
             if (!acc[nexusKey]) {
               acc[nexusKey] = {
@@ -1235,7 +1257,7 @@ export const getAllTagsForManager = query({
                 }>
               };
             }
-            
+
             const notebookKey = `${info.notebookId}-${info.notebookName}`;
             if (!acc[nexusKey].notebooks[notebookKey]) {
               acc[nexusKey].notebooks[notebookKey] = {
@@ -1244,13 +1266,13 @@ export const getAllTagsForManager = query({
                 chunks: []
               };
             }
-            
+
             acc[nexusKey].notebooks[notebookKey].chunks.push({
               chunkId: info.chunkId,
               chunkTitle: info.chunkTitle,
               chunkText: info.chunkText,
             });
-            
+
             return acc;
           }, {} as Record<string, {
             nexusId: string;
@@ -1265,7 +1287,7 @@ export const getAllTagsForManager = query({
               }>;
             }>;
           }>);
-        
+
         return {
           ...tag,
           parentTag,
@@ -1278,7 +1300,7 @@ export const getAllTagsForManager = query({
         };
       })
     );
-    
+
     return tagsWithInfo;
   },
 });
@@ -1292,7 +1314,7 @@ export const getTagsByOriginNexus = query({
       .withIndex("by_origin_nexus", (q) => q.eq("originNexusId", args.nexusId))
       .collect();
     const scoped = args.ownerId ? tags.filter(t => t.ownerId === args.ownerId) : tags;
-    
+
     // Fetch additional info similar to getAllTagsForManager but for filtered tags
     const tagsWithInfo = await Promise.all(
       scoped.map(async (tag) => {
@@ -1301,12 +1323,12 @@ export const getTagsByOriginNexus = query({
         const originNexus = tag.originNexusId ? await ctx.db.get(tag.originNexusId) : null;
         const currentNotebook = await ctx.db.get(tag.notebookId);
         const currentNexus = currentNotebook ? await ctx.db.get(currentNotebook.nexusId) : null;
-        
+
         const chunkTags = await ctx.db
           .query("chunkTags")
           .withIndex("by_tag", (q) => q.eq("tagId", tag._id))
           .collect();
-        
+
         return {
           ...tag,
           parentTag,
@@ -1318,7 +1340,7 @@ export const getTagsByOriginNexus = query({
         };
       })
     );
-    
+
     return tagsWithInfo;
   },
 });
@@ -1332,7 +1354,7 @@ export const getTagsByOriginNotebook = query({
       .withIndex("by_origin_notebook", (q) => q.eq("originNotebookId", args.notebookId))
       .collect();
     const scoped = args.ownerId ? tags.filter(t => t.ownerId === args.ownerId) : tags;
-    
+
     // Fetch additional info
     const tagsWithInfo = await Promise.all(
       scoped.map(async (tag) => {
@@ -1341,12 +1363,12 @@ export const getTagsByOriginNotebook = query({
         const originNexus = tag.originNexusId ? await ctx.db.get(tag.originNexusId) : null;
         const currentNotebook = await ctx.db.get(tag.notebookId);
         const currentNexus = currentNotebook ? await ctx.db.get(currentNotebook.nexusId) : null;
-        
+
         const chunkTags = await ctx.db
           .query("chunkTags")
           .withIndex("by_tag", (q) => q.eq("tagId", tag._id))
           .collect();
-        
+
         return {
           ...tag,
           parentTag,
@@ -1358,14 +1380,14 @@ export const getTagsByOriginNotebook = query({
         };
       })
     );
-    
+
     return tagsWithInfo;
   },
 });
 
 // Get tags filtered by context for chunk tag selection
 export const getTagsByContext = query({
-  args: { 
+  args: {
     currentNotebookId: v.id("notebooks"),
     currentNexusId: v.id("nexi"),
     ownerId: v.optional(v.string())
@@ -1374,7 +1396,7 @@ export const getTagsByContext = query({
     // Get current notebook and nexus info
     const currentNotebook = await ctx.db.get(args.currentNotebookId);
     const currentNexus = await ctx.db.get(args.currentNexusId);
-    
+
     if (!currentNotebook || !currentNexus) {
       return { locusTags: [], nexusTags: [], globalTags: [] };
     }
@@ -1383,20 +1405,24 @@ export const getTagsByContext = query({
     const allTags = args.ownerId
       ? await ctx.db.query("tags").withIndex("by_owner", q => q.eq("ownerId", args.ownerId)).collect()
       : await ctx.db.query("tags").collect();
-    
+
     // Categorize tags by context
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const locusTags: any[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nexusTags: any[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const globalTags: any[] = [];
+    type EnrichedTag = Doc<"tags"> & {
+      originNotebook: Doc<"notebooks"> | null;
+      originNexus: Doc<"nexi"> | null;
+      currentNotebook: Doc<"notebooks"> | null;
+      currentNexus: Doc<"nexi"> | null;
+      context: string;
+    };
+    const locusTags: EnrichedTag[] = [];
+    const nexusTags: EnrichedTag[] = [];
+    const globalTags: EnrichedTag[] = [];
 
     for (const tag of allTags) {
       // Get origin info for this tag
       const originNotebook = tag.originNotebookId ? await ctx.db.get(tag.originNotebookId) : null;
       const originNexus = tag.originNexusId ? await ctx.db.get(tag.originNexusId) : null;
-      
+
       // Get current notebook and nexus for this tag
       const tagNotebook = await ctx.db.get(tag.notebookId);
       const tagNexus = tagNotebook ? await ctx.db.get(tagNotebook.nexusId) : null;
@@ -1514,14 +1540,14 @@ export const getPromptTemplatesByUsage = query({
       .filter((q) => q.eq(q.field("isActive"), true))
       .order("desc")
       .collect();
-    
+
     return templates.slice(0, limit);
   },
 });
 
 // Get content items for a locus organized by type and position
 export const getLocusContentItems = query({
-  args: { 
+  args: {
     locusId: v.string(), // Can be nexus ID or notebook ID
     contentType: v.optional(v.union(
       v.literal("chunk"),
@@ -1534,21 +1560,21 @@ export const getLocusContentItems = query({
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("locusContentItems")
-      .withIndex("by_locus_parent", (q) => 
+      .withIndex("by_locus_parent", (q) =>
         q.eq("locusId", args.locusId).eq("parentId", args.parentId)
       );
-    
+
     if (args.contentType) {
       query = query.filter((q) => q.eq(q.field("contentType"), args.contentType));
     }
-    
+
     const items = await query.order("asc").collect();
-    
+
     // Enrich items with their actual content data
     const enrichedItems = await Promise.all(
       items.map(async (item) => {
         let contentData = null;
-        
+
         switch (item.contentType) {
           case "chunk":
             const chunk = await ctx.db.get(item.contentId as Id<"chunks">);
@@ -1567,14 +1593,14 @@ export const getLocusContentItems = query({
             contentData = await ctx.db.get(item.contentId as Id<"conversationMessages">);
             break;
         }
-        
+
         return {
           ...item,
           contentData,
         };
       })
     );
-    
+
     return enrichedItems.filter(item => item.contentData !== null);
   },
 });
@@ -1587,7 +1613,7 @@ export const getNotebooksByNexus = query({
     if (!nexus) return [];
 
     // Check access permissions
-    const isShared = (nexus as any).ownerId === undefined;
+    const isShared = nexus.ownerId === undefined;
     if (args.ownerId) {
       const isOwner = nexus.ownerId === args.ownerId;
       if (!isOwner && !isShared) return [];
@@ -1599,7 +1625,7 @@ export const getNotebooksByNexus = query({
     // Get notebooks with proper ordering from locusContentItems
     const locusItems = await ctx.db
       .query("locusContentItems")
-      .withIndex("by_locus_parent", (q) => 
+      .withIndex("by_locus_parent", (q) =>
         q.eq("locusId", args.nexusId).eq("parentId", undefined)
       )
       .filter((q) => q.eq(q.field("contentType"), "notebook"))
@@ -1615,12 +1641,12 @@ export const getNotebooksByNexus = query({
     );
 
     // Filter out null notebooks and scope by owner
-    let filteredNotebooks = notebooks.filter(n => n !== null) as any[];
-    
+    let filteredNotebooks = notebooks.filter(n => n !== null) as Doc<"notebooks">[];
+
     // For shared nexi, return all notebooks (including those without ownerId)
     // For owned nexi, scope by owner when ownerId provided
     if (args.ownerId && !isShared) {
-      filteredNotebooks = filteredNotebooks.filter(n => (n as any).ownerId === args.ownerId || (n as any).ownerId === undefined);
+      filteredNotebooks = filteredNotebooks.filter(n => n.ownerId === args.ownerId || n.ownerId === undefined);
     }
 
     return filteredNotebooks;
@@ -1641,7 +1667,7 @@ export const getAllNotebooks = query({
     }
 
     // Get notebooks for each allowed nexus with nexus information
-    const allNotebooks = [] as Array<any>;
+    const allNotebooks: Array<Doc<"notebooks"> & { nexusName: string }> = [];
     for (const nexus of nexi) {
       let notebooks = await ctx.db
         .query("notebooks")
@@ -1650,17 +1676,17 @@ export const getAllNotebooks = query({
 
       // Scope notebooks by owner if ownerId provided; allow undefined only for back-compat within user's own nexi
       if (args.ownerId) {
-        notebooks = notebooks.filter((nb) => (nb as any).ownerId === args.ownerId || (nb as any).ownerId === undefined);
+        notebooks = notebooks.filter((nb) => nb.ownerId === args.ownerId || nb.ownerId === undefined);
       }
-      
+
       const notebooksWithNexus = notebooks.map((notebook) => ({
         ...notebook,
         nexusName: nexus.name,
       }));
-      
+
       allNotebooks.push(...notebooksWithNexus);
     }
-    
+
     return allNotebooks;
   },
 });
@@ -1676,15 +1702,15 @@ export const getShadowChunkInfo = query({
       .query("chunkConnections")
       .withIndex("by_shadow", (q) => q.eq("shadowChunkId", args.chunkId))
       .first();
-    
+
     if (!connection) {
       return null; // Not a shadow chunk
     }
-    
+
     // Get the source chunk and notebook info
     const sourceChunk = await ctx.db.get(connection.sourceChunkId);
     const sourceNotebook = sourceChunk?.notebookId ? await ctx.db.get(sourceChunk.notebookId) : null;
-    
+
     return {
       connection,
       sourceChunk,
@@ -1703,13 +1729,13 @@ export const getChunkConnections = query({
       .query("chunkConnections")
       .withIndex("by_source", (q) => q.eq("sourceChunkId", args.chunkId))
       .collect();
-    
+
     // Get additional details for each connection
     const connectionsWithDetails = await Promise.all(
       connections.map(async (connection) => {
         const targetNotebook = await ctx.db.get(connection.targetNotebookId);
         const shadowChunk = await ctx.db.get(connection.shadowChunkId);
-        
+
         // Get nexus information for the target notebook
         let targetNotebookWithNexus = targetNotebook;
         if (targetNotebook) {
@@ -1719,7 +1745,7 @@ export const getChunkConnections = query({
             nexusName: nexus?.name,
           } as typeof targetNotebook & { nexusName?: string };
         }
-        
+
         return {
           ...connection,
           targetNotebook: targetNotebookWithNexus,
@@ -1727,7 +1753,7 @@ export const getChunkConnections = query({
         };
       })
     );
-    
+
     return connectionsWithDetails;
   },
 });
@@ -1739,7 +1765,7 @@ export const getChunkConnectionCounts = query({
   },
   handler: async (ctx, args) => {
     const counts: Record<string, number> = {};
-    
+
     // Get all connections for the provided chunk IDs
     // Work around lack of .in() by collecting all and filtering in JS
     const allConnections = await ctx.db
@@ -1755,7 +1781,7 @@ export const getChunkConnectionCounts = query({
       const chunkId = connection.sourceChunkId;
       counts[chunkId] = (counts[chunkId] || 0) + 1;
     }
-    
+
     return counts;
   },
 });
@@ -1817,7 +1843,7 @@ export const getChunksByMetaTag = query({
           if (nexus) {
             // Only include chunks from nexi owned by this user
             // NO shared chunks (except USER MANUAL which should have user-specific copies)
-            const isUserOwned = (nexus as any).ownerId === args.ownerId;
+            const isUserOwned = nexus.ownerId === args.ownerId;
 
             if (isUserOwned) {
               filteredChunks.push(chunk);
@@ -1830,7 +1856,7 @@ export const getChunksByMetaTag = query({
 
     // Get the meta tag information
     const metaTag = await ctx.db.get(args.metaTagId);
-    
+
     // Get chunks with their meta tag and tags information
     const chunksWithMetaTags = await Promise.all(
       chunks.map(async (chunk) => {
@@ -1839,16 +1865,16 @@ export const getChunksByMetaTag = query({
           .query("chunkTags")
           .withIndex("by_chunk", (q) => q.eq("chunkId", chunk._id))
           .collect();
-        
+
         const tags = await Promise.all(
           chunkTags.map(async (chunkTag) => {
             const tag = await ctx.db.get(chunkTag.tagId);
             return tag;
           })
         );
-        
+
         const validTags = tags.filter(tag => tag !== null);
-        
+
         return {
           ...chunk,
           metaTag,
